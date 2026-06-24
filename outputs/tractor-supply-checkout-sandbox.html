@@ -1,0 +1,3293 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hoop's BOF Experience Sandbox</title>
+  <style>
+    :root {
+      --tsc-red: #c41230;
+      --tsc-red-dark: #8e0f25;
+      --ink: #222222;
+      --muted: #62676c;
+      --paper: #ffffff;
+      --canvas: #f5f2ed;
+      --line: #d8d2c8;
+      --field: #276241;
+      --field-soft: #eaf3eb;
+      --amber: #f4b63e;
+      --amber-soft: #fff3d2;
+      --blue: #2f6d94;
+      --blue-soft: #e8f1f7;
+      --plum: #6f455f;
+      --shadow: 0 14px 34px rgba(41, 34, 28, 0.14);
+      --radius: 8px;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: var(--canvas);
+      min-height: 100vh;
+    }
+
+    button,
+    input,
+    textarea,
+    select {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    .app {
+      min-height: 100vh;
+      display: grid;
+      grid-template-rows: auto 1fr;
+    }
+
+    .topbar {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 12px 18px;
+      background: rgba(255, 255, 255, 0.94);
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(10px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .brand-mark {
+      display: grid;
+      place-items: center;
+      width: 42px;
+      height: 42px;
+      color: #ffffff;
+      background: var(--tsc-red);
+      border-radius: 6px;
+      font-weight: 900;
+      font-size: 13px;
+      letter-spacing: 0;
+      box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.12);
+    }
+
+    .brand-copy {
+      display: grid;
+      gap: 1px;
+      min-width: 0;
+    }
+
+    .brand-copy strong {
+      font-size: 15px;
+      line-height: 1.1;
+      white-space: nowrap;
+    }
+
+    .brand-copy span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .view-tabs {
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .tab-btn,
+    .icon-btn,
+    .ghost-btn,
+    .primary-btn,
+    .chip-btn,
+    .component-btn {
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      border-radius: var(--radius);
+      min-height: 38px;
+      transition: transform 0.16s ease, box-shadow 0.16s ease, border-color 0.16s ease, background 0.16s ease;
+    }
+
+    .tab-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 14px;
+      min-width: 110px;
+      font-size: 14px;
+      font-weight: 750;
+    }
+
+    .tab-btn svg,
+    .icon-btn svg,
+    .ghost-btn svg,
+    .primary-btn svg,
+    .component-btn svg {
+      flex: 0 0 auto;
+    }
+
+    .tab-btn[aria-pressed="true"] {
+      border-color: var(--tsc-red);
+      background: #fff0f3;
+      color: var(--tsc-red-dark);
+    }
+
+    .top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      min-width: 0;
+    }
+
+    .version-select {
+      min-width: 190px;
+      height: 38px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      border-radius: var(--radius);
+      padding: 0 12px;
+      color: var(--ink);
+    }
+
+    .workspace {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 380px;
+      gap: 18px;
+      padding: 18px;
+      align-items: start;
+    }
+
+    .screenshot-top-panel {
+      display: grid;
+      gap: 12px;
+      padding: 14px 18px;
+      background: #fffdf8;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .screenshot-top-panel .panel-heading {
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .screenshot-top-panel .screenshot-upload-grid {
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+
+    .screenshot-top-actions {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      max-width: 1440px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    .stage-wrap {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .metrics-strip {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(140px, 1fr));
+      gap: 10px;
+    }
+
+    .metric {
+      display: grid;
+      gap: 4px;
+      min-height: 76px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .metric span {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .metric strong {
+      font-size: 24px;
+      line-height: 1;
+    }
+
+    .metric small {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .prototype-stage {
+      min-height: 740px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #fdfcf9;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .cart-shell {
+      background: #ffffff;
+    }
+
+    .store-header {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 18px;
+      align-items: center;
+      padding: 12px 18px;
+      color: #ffffff;
+      background: #202020;
+      border-bottom: 5px solid var(--tsc-red);
+    }
+
+    .store-logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 900;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .store-logo .logo-box {
+      display: grid;
+      place-items: center;
+      width: 34px;
+      height: 28px;
+      background: var(--tsc-red);
+      border-radius: 4px;
+      color: #ffffff;
+      font-size: 10px;
+      letter-spacing: 0;
+    }
+
+    .store-nav {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      font-size: 13px;
+      color: #f1f1f1;
+    }
+
+    .store-cart {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: flex-end;
+      font-size: 13px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .experience-banner {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 14px 18px;
+      border-bottom: 1px solid #ece6db;
+      background: #fff8e7;
+    }
+
+    .experience-banner strong {
+      display: block;
+      margin-bottom: 3px;
+      font-size: 15px;
+    }
+
+    .experience-banner span {
+      color: #5d5341;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .banner-status {
+      display: inline-flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      min-height: 36px;
+      padding: 0 12px;
+      border-radius: 999px;
+      color: #215236;
+      background: #e7f4eb;
+      border: 1px solid #bdd9c5;
+      font-size: 12px;
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .checkout-progress {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 16px 18px 4px;
+      background: #ffffff;
+    }
+
+    .progress-step {
+      display: grid;
+      grid-template-columns: 30px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 42px;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .progress-dot {
+      display: grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: #eeeeee;
+      color: #555555;
+      font-size: 12px;
+    }
+
+    .progress-step.active {
+      color: var(--tsc-red-dark);
+    }
+
+    .progress-step.active .progress-dot {
+      color: #ffffff;
+      background: var(--tsc-red);
+    }
+
+    .prototype-body {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 300px;
+      gap: 18px;
+      padding: 18px;
+      align-items: start;
+    }
+
+    .cart-main,
+    .checkout-main,
+    .summary-column {
+      display: grid;
+      gap: 14px;
+      min-width: 0;
+    }
+
+    .page-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      gap: 16px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #ede6dc;
+    }
+
+    .page-title h1 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.1;
+      letter-spacing: 0;
+    }
+
+    .page-title span {
+      color: var(--muted);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .fulfillment-switch {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .fulfillment-card,
+    .checkout-section,
+    .order-summary,
+    .trust-row,
+    .product-row,
+    .note-row {
+      border: 1px solid #e4ded4;
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .fulfillment-card {
+      position: relative;
+      display: grid;
+      gap: 5px;
+      min-height: 104px;
+      padding: 14px;
+    }
+
+    .fulfillment-card.selected {
+      border-color: var(--field);
+      background: var(--field-soft);
+      box-shadow: inset 0 0 0 2px rgba(39, 98, 65, 0.08);
+    }
+
+    .fulfillment-card strong {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .fulfillment-card span {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 24px;
+      width: fit-content;
+      padding: 0 8px;
+      color: #264f36;
+      background: #dcf0e3;
+      border: 1px solid #b7d8c3;
+      border-radius: 999px;
+      font-size: 11px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .badge.amber {
+      color: #66521a;
+      background: var(--amber-soft);
+      border-color: #e6cf84;
+    }
+
+    .badge.blue {
+      color: #204a68;
+      background: var(--blue-soft);
+      border-color: #bad3e2;
+    }
+
+    .product-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    .product-row {
+      position: relative;
+      display: grid;
+      grid-template-columns: 96px minmax(0, 1fr) auto;
+      gap: 14px;
+      align-items: center;
+      padding: 12px;
+    }
+
+    .product-media {
+      display: grid;
+      place-items: center;
+      width: 96px;
+      height: 96px;
+      border: 1px solid #eadfce;
+      border-radius: 6px;
+      background: #fbf3e8;
+      overflow: hidden;
+    }
+
+    .product-media svg {
+      width: 86px;
+      height: 86px;
+      display: block;
+    }
+
+    .product-info {
+      display: grid;
+      gap: 6px;
+      min-width: 0;
+    }
+
+    .product-info h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.25;
+    }
+
+    .product-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .stock-line {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 7px;
+      color: #295238;
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .qty-control {
+      display: inline-grid;
+      grid-template-columns: 34px 42px 34px;
+      align-items: center;
+      width: 110px;
+      height: 34px;
+      border: 1px solid #d8d2c8;
+      border-radius: 6px;
+      overflow: hidden;
+      background: #ffffff;
+    }
+
+    .qty-control span,
+    .qty-control button {
+      display: grid;
+      place-items: center;
+      height: 34px;
+      border: 0;
+      border-right: 1px solid #e3ddd3;
+      background: transparent;
+      color: #2b2b2b;
+      font-weight: 800;
+    }
+
+    .qty-control button:last-child {
+      border-right: 0;
+    }
+
+    .product-price {
+      display: grid;
+      gap: 10px;
+      justify-items: end;
+      min-width: 122px;
+    }
+
+    .product-price strong {
+      font-size: 17px;
+    }
+
+    .checkout-section {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .section-title {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title h2 {
+      margin: 0;
+      font-size: 18px;
+      line-height: 1.2;
+    }
+
+    .section-title span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .choice-row {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .choice-box {
+      min-height: 76px;
+      padding: 12px;
+      border: 1px solid #ded7cc;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .choice-box.selected {
+      border-color: var(--field);
+      background: var(--field-soft);
+    }
+
+    .choice-box strong {
+      display: block;
+      margin-bottom: 4px;
+      font-size: 14px;
+    }
+
+    .choice-box span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .field-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .fake-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .fake-field label {
+      color: #4b4f54;
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .fake-input {
+      display: flex;
+      align-items: center;
+      min-height: 42px;
+      padding: 0 12px;
+      border: 1px solid #d9d2c7;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #777777;
+      font-size: 13px;
+    }
+
+    .inline-alert {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      min-height: 44px;
+      padding: 10px 12px;
+      border: 1px solid #bdd9c5;
+      border-radius: 6px;
+      color: #254f35;
+      background: #edf7ef;
+      font-size: 13px;
+      font-weight: 730;
+    }
+
+    .payment-rail {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .payment-pill {
+      display: grid;
+      place-items: center;
+      min-height: 42px;
+      padding: 8px;
+      border: 1px solid #d8d2c8;
+      border-radius: 6px;
+      color: #2e3236;
+      background: #ffffff;
+      font-size: 12px;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .summary-column {
+      position: sticky;
+      top: 82px;
+    }
+
+    .order-summary {
+      position: relative;
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+    }
+
+    .order-summary h2 {
+      margin: 0;
+      font-size: 18px;
+    }
+
+    .summary-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      color: #4f5257;
+      font-size: 14px;
+    }
+
+    .summary-line.savings {
+      color: #235434;
+      font-weight: 850;
+    }
+
+    .summary-line.total {
+      padding-top: 12px;
+      border-top: 1px solid #e4ded4;
+      color: var(--ink);
+      font-size: 18px;
+      font-weight: 900;
+    }
+
+    .promo-box {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      min-height: 44px;
+      padding: 8px;
+      border: 1px solid #ded7cc;
+      border-radius: 6px;
+      background: #fbfaf7;
+    }
+
+    .promo-box span {
+      padding-left: 6px;
+      color: var(--muted);
+      font-size: 13px;
+    }
+
+    .primary-btn,
+    .ghost-btn,
+    .icon-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 0 13px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
+    .primary-btn {
+      color: #ffffff;
+      background: var(--tsc-red);
+      border-color: var(--tsc-red);
+      min-height: 42px;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .primary-btn:hover,
+    .tab-btn:hover,
+    .ghost-btn:hover,
+    .icon-btn:hover,
+    .chip-btn:hover,
+    .component-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 8px 18px rgba(35, 29, 25, 0.12);
+    }
+
+    .primary-btn:active,
+    .tab-btn:active,
+    .ghost-btn:active,
+    .icon-btn:active,
+    .chip-btn:active,
+    .component-btn:active {
+      transform: translateY(0);
+      box-shadow: none;
+    }
+
+    .ghost-btn {
+      background: #ffffff;
+    }
+
+    .icon-btn {
+      width: 38px;
+      padding: 0;
+    }
+
+    .trust-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0;
+      overflow: hidden;
+    }
+
+    .trust-item {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 72px;
+      padding: 10px;
+      border-right: 1px solid #e4ded4;
+      background: #ffffff;
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .trust-item:last-child {
+      border-right: 0;
+    }
+
+    .trust-item svg {
+      color: var(--field);
+    }
+
+    .sticky-checkout {
+      display: none;
+      position: sticky;
+      bottom: 0;
+      z-index: 5;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      color: #ffffff;
+      background: #202020;
+      border-top: 5px solid var(--tsc-red);
+    }
+
+    .sticky-checkout strong {
+      display: block;
+      font-size: 14px;
+    }
+
+    .sticky-checkout span {
+      color: #e0e0e0;
+      font-size: 12px;
+    }
+
+    .annotation {
+      display: none;
+      margin-top: 10px;
+      padding: 9px 10px;
+      color: #3c2d08;
+      background: #fff5d6;
+      border: 1px solid #e8cf7b;
+      border-radius: 6px;
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .show-notes .annotation {
+      display: block;
+    }
+
+    .control-panel {
+      display: grid;
+      gap: 14px;
+      position: sticky;
+      top: 76px;
+      max-height: calc(100vh - 94px);
+      overflow: auto;
+      padding-right: 3px;
+    }
+
+    .panel-block {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .panel-heading {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+    }
+
+    .panel-heading h2 {
+      margin: 0;
+      font-size: 15px;
+      line-height: 1.2;
+    }
+
+    .panel-heading span {
+      color: var(--muted);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .prompt-box {
+      min-height: 106px;
+      width: 100%;
+      resize: vertical;
+      border: 1px solid #d7d0c6;
+      border-radius: var(--radius);
+      padding: 12px;
+      color: var(--ink);
+      background: #fffcf7;
+      line-height: 1.42;
+    }
+
+    .button-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip-btn {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 10px;
+      font-size: 12px;
+      font-weight: 750;
+      color: #35383c;
+      background: #f7f3ec;
+    }
+
+    .component-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .component-btn {
+      display: grid;
+      grid-template-columns: 28px 1fr;
+      gap: 8px;
+      align-items: center;
+      min-height: 54px;
+      padding: 8px;
+      text-align: left;
+      font-size: 12px;
+      font-weight: 800;
+      line-height: 1.2;
+    }
+
+    .component-btn svg {
+      color: var(--muted);
+    }
+
+    .component-btn.active {
+      border-color: var(--field);
+      background: var(--field-soft);
+      color: #1f4e34;
+    }
+
+    .component-btn.active svg {
+      color: var(--field);
+    }
+
+    .toggle-line {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: #3d4145;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .switch {
+      position: relative;
+      width: 48px;
+      height: 28px;
+      flex: 0 0 auto;
+    }
+
+    .switch input {
+      position: absolute;
+      opacity: 0;
+    }
+
+    .slider {
+      position: absolute;
+      inset: 0;
+      border-radius: 999px;
+      background: #dad3c8;
+      transition: background 0.16s ease;
+    }
+
+    .slider::after {
+      content: "";
+      position: absolute;
+      top: 4px;
+      left: 4px;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+      transition: transform 0.16s ease;
+    }
+
+    .switch input:checked + .slider {
+      background: var(--field);
+    }
+
+    .switch input:checked + .slider::after {
+      transform: translateX(20px);
+    }
+
+    .version-list {
+      display: grid;
+      gap: 8px;
+      max-height: 210px;
+      overflow: auto;
+      padding-right: 2px;
+    }
+
+    .version-item {
+      display: grid;
+      gap: 5px;
+      padding: 10px;
+      border: 1px solid #e2dacf;
+      border-radius: 6px;
+      background: #fffdf8;
+      text-align: left;
+    }
+
+    .version-item.active {
+      border-color: var(--tsc-red);
+      background: #fff2f5;
+    }
+
+    .version-item strong {
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .version-item span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .notes-field {
+      min-height: 118px;
+      resize: vertical;
+      border: 1px solid #d7d0c6;
+      border-radius: var(--radius);
+      padding: 10px;
+      line-height: 1.42;
+    }
+
+    .reference-board {
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .reference-board[hidden] {
+      display: none;
+    }
+
+    .reference-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .reference-head h2 {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.2;
+    }
+
+    .reference-head span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: right;
+    }
+
+    .screenshot-focus {
+      display: grid;
+      grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.7fr);
+      gap: 12px;
+      align-items: start;
+    }
+
+    .focus-image-card,
+    .insight-panel {
+      display: grid;
+      gap: 12px;
+      min-width: 0;
+      border: 1px solid #e1d9cf;
+      border-radius: var(--radius);
+      background: #fffdf8;
+      overflow: hidden;
+    }
+
+    .focus-image-head,
+    .insight-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 46px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #ece5db;
+    }
+
+    .focus-image-head strong,
+    .insight-head strong {
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .focus-image-head span,
+    .insight-head span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: right;
+    }
+
+    .focus-image-wrap {
+      display: grid;
+      place-items: start center;
+      max-height: 720px;
+      overflow: auto;
+      background: #f2ece3;
+    }
+
+    .focus-image-wrap img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .focus-empty {
+      display: grid;
+      gap: 10px;
+      place-items: center;
+      min-height: 260px;
+      padding: 24px;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.4;
+    }
+
+    .focus-empty svg {
+      color: var(--field);
+    }
+
+    .insight-panel {
+      padding-bottom: 12px;
+    }
+
+    .insight-list {
+      display: grid;
+      gap: 8px;
+      padding: 0 12px;
+    }
+
+    .insight-card {
+      display: grid;
+      gap: 5px;
+      padding: 10px;
+      border: 1px solid #e5ded4;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .insight-card strong {
+      font-size: 13px;
+      line-height: 1.25;
+    }
+
+    .insight-card span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
+    .focus-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 12px;
+    }
+
+    .screenshot-picker {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 0 12px;
+    }
+
+    .shot-tab {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #ffffff;
+      color: #34383c;
+      font-size: 12px;
+      font-weight: 800;
+    }
+
+    .shot-tab[aria-pressed="true"] {
+      border-color: var(--field);
+      background: var(--field-soft);
+      color: #1f4e34;
+    }
+
+    .screenshot-grid,
+    .screenshot-upload-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .screenshot-upload-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .screenshot-card,
+    .screenshot-dropzone {
+      position: relative;
+      min-width: 0;
+      border: 1px solid #e1d9cf;
+      border-radius: var(--radius);
+      background: #fffdf8;
+      overflow: hidden;
+    }
+
+    .screenshot-card {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      min-height: 220px;
+    }
+
+    .screenshot-card.empty {
+      min-height: 148px;
+      background: #f8f4ed;
+    }
+
+    .screenshot-card-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      min-height: 42px;
+      padding: 8px 10px;
+      border-bottom: 1px solid #ece5db;
+      font-size: 13px;
+      font-weight: 850;
+    }
+
+    .screenshot-card-head span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .screenshot-image-wrap {
+      display: grid;
+      place-items: start center;
+      min-height: 156px;
+      max-height: 360px;
+      overflow: auto;
+      background: #f3eee7;
+    }
+
+    .screenshot-image-wrap img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .screenshot-empty {
+      display: grid;
+      place-items: center;
+      min-height: 104px;
+      padding: 16px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .screenshot-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      min-height: 34px;
+      padding: 8px 10px;
+      border-top: 1px solid #ece5db;
+      color: var(--muted);
+      font-size: 12px;
+    }
+
+    .screenshot-dropzone {
+      display: grid;
+      grid-template-columns: 32px 1fr auto;
+      gap: 9px;
+      align-items: center;
+      min-height: 70px;
+      padding: 10px;
+      color: #33373b;
+      text-align: left;
+    }
+
+    .screenshot-dropzone.dragover {
+      border-color: var(--field);
+      background: var(--field-soft);
+      box-shadow: inset 0 0 0 2px rgba(39, 98, 65, 0.08);
+    }
+
+    .screenshot-dropzone input {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
+
+    .screenshot-dropzone svg {
+      color: var(--field);
+    }
+
+    .screenshot-dropzone strong,
+    .screenshot-dropzone span {
+      display: block;
+    }
+
+    .screenshot-dropzone strong {
+      font-size: 13px;
+      line-height: 1.2;
+    }
+
+    .screenshot-dropzone span {
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.25;
+    }
+
+    .remove-shot-btn {
+      display: inline-grid;
+      place-items: center;
+      width: 30px;
+      height: 30px;
+      border: 1px solid #dfd7cd;
+      border-radius: 6px;
+      background: #ffffff;
+      color: #585c60;
+    }
+
+    .compare-view {
+      display: none;
+      gap: 14px;
+    }
+
+    .compare-controls {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr)) auto;
+      gap: 10px;
+      align-items: end;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .select-field {
+      display: grid;
+      gap: 6px;
+    }
+
+    .select-field label {
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+    }
+
+    .select-field select {
+      height: 40px;
+      border: 1px solid #d7d0c6;
+      border-radius: 6px;
+      background: #ffffff;
+      padding: 0 10px;
+    }
+
+    .compare-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      align-items: start;
+    }
+
+    .compare-card {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+      overflow: hidden;
+    }
+
+    .compare-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: center;
+      min-height: 54px;
+      padding: 12px;
+      border-bottom: 1px solid #e4ded4;
+    }
+
+    .compare-head strong {
+      font-size: 14px;
+    }
+
+    .compare-mini {
+      transform-origin: top left;
+      min-height: 680px;
+      overflow: hidden;
+    }
+
+    .compare-mini .store-nav,
+    .compare-mini .experience-banner,
+    .compare-mini .product-meta,
+    .compare-mini .qty-control,
+    .compare-mini .annotation {
+      display: none;
+    }
+
+    .compare-mini .prototype-body {
+      grid-template-columns: minmax(0, 1fr);
+      padding: 12px;
+    }
+
+    .compare-mini .summary-column {
+      position: relative;
+      top: auto;
+    }
+
+    .diff-panel {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: var(--paper);
+    }
+
+    .diff-panel h2 {
+      margin: 0 0 4px;
+      font-size: 15px;
+    }
+
+    .diff-list {
+      display: grid;
+      gap: 8px;
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .diff-list li {
+      display: grid;
+      grid-template-columns: 24px 1fr;
+      gap: 8px;
+      align-items: start;
+      color: #45494d;
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .diff-list svg {
+      margin-top: 1px;
+      color: var(--blue);
+    }
+
+    .toast {
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 40;
+      display: none;
+      max-width: min(420px, calc(100vw - 36px));
+      padding: 12px 14px;
+      color: #ffffff;
+      background: #232323;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      font-size: 13px;
+      line-height: 1.35;
+    }
+
+    .toast.show {
+      display: block;
+      animation: toastIn 0.18s ease-out;
+    }
+
+    @keyframes toastIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 1180px) {
+      .workspace {
+        grid-template-columns: minmax(0, 1fr);
+      }
+
+      .control-panel {
+        position: relative;
+        top: auto;
+        max-height: none;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        align-items: start;
+      }
+
+      .panel-block.wide-panel {
+        grid-column: 1 / -1;
+      }
+    }
+
+    @media (max-width: 860px) {
+      .topbar {
+        grid-template-columns: 1fr;
+        align-items: stretch;
+      }
+
+      .view-tabs {
+        justify-content: start;
+        overflow-x: auto;
+        padding-bottom: 2px;
+      }
+
+      .top-actions {
+        justify-content: start;
+      }
+
+      .version-select {
+        min-width: 0;
+        flex: 1 1 220px;
+      }
+
+      .metrics-strip,
+      .prototype-body,
+      .compare-grid,
+      .compare-controls,
+      .control-panel,
+      .screenshot-focus,
+      .screenshot-grid,
+      .screenshot-top-panel .screenshot-upload-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .screenshot-top-actions {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .summary-column {
+        position: relative;
+        top: auto;
+      }
+
+      .prototype-stage {
+        min-height: 0;
+      }
+
+      .store-header,
+      .experience-banner {
+        grid-template-columns: 1fr;
+      }
+
+      .store-nav {
+        justify-content: flex-start;
+        flex-wrap: wrap;
+      }
+
+      .checkout-progress {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 620px) {
+      .workspace {
+        padding: 12px;
+      }
+
+      .prototype-body {
+        padding: 12px;
+      }
+
+      .fulfillment-switch,
+      .choice-row,
+      .field-grid,
+      .component-grid,
+      .trust-row,
+      .payment-rail,
+      .screenshot-grid,
+      .screenshot-top-panel .screenshot-upload-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .product-row {
+        grid-template-columns: 82px minmax(0, 1fr);
+      }
+
+      .product-media {
+        width: 82px;
+        height: 82px;
+      }
+
+      .product-media svg {
+        width: 74px;
+        height: 74px;
+      }
+
+      .product-price {
+        grid-column: 1 / -1;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        min-width: 0;
+      }
+
+      .page-title {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+
+      .page-title span {
+        white-space: normal;
+      }
+
+      .sticky-checkout.enabled {
+        display: grid;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">BOF</div>
+        <div class="brand-copy">
+          <strong>Hoop's BOF Experience Sandbox</strong>
+          <span>Tractor Supply cart and checkout prototype workspace</span>
+        </div>
+      </div>
+
+      <nav class="view-tabs" aria-label="Prototype view">
+        <button class="tab-btn" id="cartTab" type="button" aria-pressed="true" title="Cart view">
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 20a1.8 1.8 0 1 0 0-3.6A1.8 1.8 0 0 0 7 20Zm10 0a1.8 1.8 0 1 0 0-3.6A1.8 1.8 0 0 0 17 20ZM4.2 5h2l1.4 8.4a2 2 0 0 0 2 1.6h7.5a2 2 0 0 0 1.9-1.4l1.3-5.1H7" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Cart
+        </button>
+        <button class="tab-btn" id="checkoutTab" type="button" aria-pressed="false" title="Checkout view">
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          Checkout
+        </button>
+        <button class="tab-btn" id="compareTab" type="button" aria-pressed="false" title="Compare versions">
+          <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h5M14 3h5a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-5M12 4v16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          Compare
+        </button>
+      </nav>
+
+      <div class="top-actions">
+        <label class="sr-only" for="versionSelect">Active version</label>
+        <select class="version-select" id="versionSelect"></select>
+        <button class="icon-btn" id="exportBtn" type="button" title="Export concept">
+          <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v12m0 0 4-4m-4 4-4-4M5 19h14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <span class="sr-only">Export concept</span>
+        </button>
+      </div>
+    </header>
+
+    <section class="screenshot-top-panel" aria-label="Screenshot uploads">
+      <div class="panel-heading">
+        <h2>Add screenshots</h2>
+        <span id="screenshotCount">0 added</span>
+      </div>
+      <div class="screenshot-upload-grid" id="screenshotUploadGrid"></div>
+      <div class="screenshot-top-actions">
+        <span class="badge blue">Cart, checkout, and mobile reference slots</span>
+        <label class="toggle-line" for="referenceToggle">
+          Show reference panel
+          <span class="switch">
+            <input id="referenceToggle" type="checkbox" checked>
+            <span class="slider"></span>
+          </span>
+        </label>
+      </div>
+    </section>
+
+    <main class="workspace">
+      <section class="stage-wrap" aria-label="Checkout prototype">
+        <div class="metrics-strip" id="metricsStrip"></div>
+        <div class="prototype-stage show-notes" id="prototypeStage"></div>
+        <section class="compare-view" id="compareView" aria-label="Version comparison">
+          <div class="compare-controls">
+            <div class="select-field">
+              <label for="compareA">Left version</label>
+              <select id="compareA"></select>
+            </div>
+            <div class="select-field">
+              <label for="compareB">Right version</label>
+              <select id="compareB"></select>
+            </div>
+            <button class="ghost-btn" type="button" id="swapCompareBtn" title="Swap comparison">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 7h11m0 0-3-3m3 3-3 3M17 17H6m0 0 3-3m-3 3 3 3" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Swap
+            </button>
+          </div>
+          <div class="diff-panel">
+            <h2>Change readout</h2>
+            <ul class="diff-list" id="diffList"></ul>
+          </div>
+          <div class="compare-grid">
+            <article class="compare-card">
+              <div class="compare-head">
+                <strong id="compareATitle"></strong>
+                <span class="badge blue" id="compareAScore"></span>
+              </div>
+              <div class="compare-mini" id="compareAPane"></div>
+            </article>
+            <article class="compare-card">
+              <div class="compare-head">
+                <strong id="compareBTitle"></strong>
+                <span class="badge blue" id="compareBScore"></span>
+              </div>
+              <div class="compare-mini" id="compareBPane"></div>
+            </article>
+          </div>
+        </section>
+        <section class="reference-board" id="referenceBoard" aria-label="Reference screenshots">
+          <div class="reference-head">
+            <h2>Reference screenshots</h2>
+            <span>Drop real TSC cart, checkout, or mobile screenshots into the slots above.</span>
+          </div>
+          <div id="screenshotFocus"></div>
+          <div class="screenshot-grid" id="screenshotPreviewGrid"></div>
+        </section>
+      </section>
+
+      <aside class="control-panel" aria-label="Sandbox controls">
+        <section class="panel-block wide-panel">
+          <div class="panel-heading">
+            <h2>Natural language</h2>
+            <span id="draftStatus">Baseline</span>
+          </div>
+          <textarea class="prompt-box" id="promptInput" spellcheck="true">Make store pickup the default, add a clearer total breakdown, and reassure customers that checkout is secure.</textarea>
+          <div class="button-row">
+            <button class="primary-btn" id="generateBtn" type="button">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              Generate
+            </button>
+            <button class="ghost-btn" id="saveBtn" type="button">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2Z M7 3v6h9M7 21v-7h10v7" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
+              Save
+            </button>
+            <button class="ghost-btn" id="resetBtn" type="button">
+              <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12a9 9 0 1 0 3-6.7M3 4v6h6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              Reset
+            </button>
+          </div>
+          <div class="chip-grid" id="promptChips"></div>
+        </section>
+
+        <section class="panel-block">
+          <div class="panel-heading">
+            <h2>Components</h2>
+            <span id="activeCount">0 active</span>
+          </div>
+          <div class="component-grid" id="componentGrid"></div>
+        </section>
+
+        <section class="panel-block">
+          <div class="panel-heading">
+            <h2>Version history</h2>
+            <span id="versionCount"></span>
+          </div>
+          <div class="version-list" id="versionList"></div>
+        </section>
+
+        <section class="panel-block wide-panel">
+          <div class="panel-heading">
+            <h2>Experiment notes</h2>
+            <span id="notesStatus">Saved locally</span>
+          </div>
+          <textarea class="notes-field" id="notesField" spellcheck="true"></textarea>
+          <label class="toggle-line" for="notesToggle">
+            Show UX notes
+            <span class="switch">
+              <input id="notesToggle" type="checkbox" checked>
+              <span class="slider"></span>
+            </span>
+          </label>
+        </section>
+      </aside>
+    </main>
+  </div>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const icons = {
+      pickup: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7h11v10H3zM14 11h4l3 3v3h-7zM7 20a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm10 0a2 2 0 1 0 0-4 2 2 0 0 0 0 4Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+      list: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      shield: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="m9 12 2 2 4-4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      dollar: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2v20M17 6.5c-1.1-.9-2.6-1.5-4.2-1.5-2.3 0-4.2 1.2-4.2 3 0 4 8.8 2 8.8 7 0 1.9-1.9 3.1-4.6 3.1-1.9 0-3.8-.7-5-1.8" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      tag: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m20 13-7 7L4 11V4h7l9 9Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M8 8h.01" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"/></svg>',
+      user: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 21a8 8 0 0 0-16 0M12 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      card: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7Zm0 3h18M7 15h4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      home: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11 12 3l9 8M5 10v10h14V10M9 20v-6h6v6" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+      phone: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm3 17h2" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>',
+      image: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm0 13 4.5-4.5 3.5 3.5 2-2 4 4M9 9h.01" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>',
+      box: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="m21 8-9-5-9 5 9 5 9-5ZM3 8v8l9 5 9-5V8M12 13v8" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>',
+      check: '<svg width="20" height="20" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    };
+
+    const featureCatalog = [
+      {
+        key: 'pickupDefault',
+        label: 'Pickup first',
+        icon: icons.pickup,
+        keywords: ['pickup', 'curbside', 'store', 'local', 'ready today', 'default fulfillment'],
+        note: 'Make pickup the first decision because many Tractor Supply trips start with local availability.'
+      },
+      {
+        key: 'progress',
+        label: 'Progress steps',
+        icon: icons.list,
+        keywords: ['progress', 'steps', 'stepper', 'timeline', 'where am i'],
+        note: 'Expose the checkout path so the shopper can estimate how much effort remains.'
+      },
+      {
+        key: 'trust',
+        label: 'Trust proof',
+        icon: icons.shield,
+        keywords: ['trust', 'secure', 'reassure', 'confidence', 'safe', 'returns', 'security'],
+        note: 'Place reassurance beside the decision point, not in a footer after the anxiety has already happened.'
+      },
+      {
+        key: 'savings',
+        label: 'Savings clarity',
+        icon: icons.dollar,
+        keywords: ['total', 'fees', 'savings', 'tax', 'breakdown', 'transparent', 'price'],
+        note: 'Show discounts and fees before the CTA so the final total feels earned instead of surprising.'
+      },
+      {
+        key: 'promoInline',
+        label: 'Promo inline',
+        icon: icons.tag,
+        keywords: ['promo', 'coupon', 'discount code', 'offer', 'deal'],
+        note: 'Keep the promo field visible but subordinate so deal-seeking does not derail checkout.'
+      },
+      {
+        key: 'guestCheckout',
+        label: 'Guest path',
+        icon: icons.user,
+        keywords: ['guest', 'accountless', 'sign in optional', 'no login', 'friction'],
+        note: 'Let account creation become a post-purchase value exchange instead of a pre-purchase blocker.'
+      },
+      {
+        key: 'paymentOptions',
+        label: 'Payment choice',
+        icon: icons.card,
+        keywords: ['payment', 'card', 'paypal', 'financing', 'pay later', 'apple pay'],
+        note: 'Surface payment choices early so budget-sensitive baskets do not stall late in the flow.'
+      },
+      {
+        key: 'addressSimplify',
+        label: 'Address assist',
+        icon: icons.home,
+        keywords: ['address', 'form', 'fields', 'zip', 'simplify', 'delivery'],
+        note: 'Start with ZIP and delivery context, then ask only for the fields needed for the selected fulfillment path.'
+      },
+      {
+        key: 'mobileSticky',
+        label: 'Sticky CTA',
+        icon: icons.phone,
+        keywords: ['mobile', 'sticky', 'small screen', 'cta', 'thumb', 'bottom'],
+        note: 'Keep the total and next action in thumb reach on mobile without covering cart content.'
+      },
+      {
+        key: 'stockConfidence',
+        label: 'Stock confidence',
+        icon: icons.box,
+        keywords: ['stock', 'inventory', 'aisle', 'availability', 'heavy', 'hold', 'pickup window'],
+        note: 'Tie availability, pickup timing, and heavy-item expectations to the item row where shoppers scan risk.'
+      }
+    ];
+
+    const promptChips = [
+      'Make pickup the default and show ready-today confidence',
+      'Reduce checkout anxiety with security and return reassurance',
+      'Clarify total, discounts, tax, and pickup savings',
+      'Make guest checkout obvious before account sign-in',
+      'Optimize mobile with a sticky order total and CTA',
+      'Simplify delivery address entry around ZIP code'
+    ];
+
+    const products = [
+      {
+        name: '4health Chicken & Rice Adult Dog Food, 35 lb.',
+        sku: 'Item #1382848',
+        price: 48.99,
+        qty: 1,
+        image: 'feed',
+        meta: ['Autoship eligible', 'Neighbor rewards'],
+        pickup: 'Ready today at Franklin, TN',
+        location: 'Aisle 14, Bay 03'
+      },
+      {
+        name: "Ridgecut Men's Work Gloves",
+        sku: 'Item #1735607',
+        price: 19.99,
+        qty: 2,
+        image: 'glove',
+        meta: ['Best seller', 'In-store pickup'],
+        pickup: '8 in stock near checkout',
+        location: 'Aisle 7, Endcap'
+      },
+      {
+        name: 'CountyLine 17 gal. Utility Tub',
+        sku: 'Item #1011712',
+        price: 13.49,
+        qty: 1,
+        image: 'tub',
+        meta: ['Bulky item', 'Curbside friendly'],
+        pickup: 'Ready for curbside loading',
+        location: 'Garden center'
+      }
+    ];
+
+    const baseFeatures = {
+      pickupDefault: false,
+      progress: false,
+      trust: false,
+      savings: false,
+      promoInline: false,
+      guestCheckout: false,
+      paymentOptions: false,
+      addressSimplify: false,
+      mobileSticky: false,
+      stockConfidence: false
+    };
+
+    const baselineVersion = {
+      id: 'baseline',
+      name: 'Baseline cart',
+      prompt: 'Reference flow with standard cart and checkout decisions.',
+      created: 'Starting point',
+      features: { ...baseFeatures },
+      notes: 'Hypothesis: Baseline is useful as the control. Compare each variation against this flow for friction, clarity, and confidence.',
+      saved: true
+    };
+
+    const starterVersions = [
+      {
+        id: 'pickup-clarity',
+        name: 'Pickup clarity',
+        prompt: 'Make store pickup the default, add stock confidence, and show a clearer total breakdown.',
+        created: 'Seed concept',
+        features: { ...baseFeatures, pickupDefault: true, stockConfidence: true, savings: true, trust: true },
+        notes: 'Hypothesis: Pickup-first framing reduces uncertainty for shoppers who need local availability and curbside loading.'
+      },
+      {
+        id: 'mobile-confidence',
+        name: 'Mobile confidence',
+        prompt: 'Optimize mobile checkout with guest checkout, progress steps, trust proof, and a sticky CTA.',
+        created: 'Seed concept',
+        features: { ...baseFeatures, guestCheckout: true, progress: true, trust: true, mobileSticky: true, paymentOptions: true },
+        notes: 'Hypothesis: A lower-friction mobile path improves checkout starts among shoppers browsing from a store aisle or job site.'
+      }
+    ];
+
+    const storageKey = 'tsc-checkout-sandbox-v1';
+    const screenshotStorageKey = 'tsc-checkout-sandbox-screenshots-v1';
+    const screenshotSlots = [
+      { key: 'cart', label: 'Cart page', helper: 'Real TSC cart screenshot' },
+      { key: 'checkout', label: 'Checkout page', helper: 'Shipping, payment, or review screenshot' },
+      { key: 'mobile', label: 'Mobile flow', helper: 'Phone screenshot for responsive ideas' }
+    ];
+    const screenshotSuggestionMap = {
+      cart: [
+        {
+          title: 'Make fulfillment confidence the first decision',
+          body: 'Cart shoppers should immediately know what is ready today, where it is available, and whether curbside loading applies.',
+          features: ['pickupDefault', 'stockConfidence']
+        },
+        {
+          title: 'Clarify the total before checkout',
+          body: 'Separate subtotal, fees, pickup savings, taxes, and rewards so the final CTA does not feel risky.',
+          features: ['savings', 'promoInline']
+        },
+        {
+          title: 'Add reassurance near the CTA',
+          body: 'Move secure checkout, returns, and pickup confidence beside the order summary where hesitation is highest.',
+          features: ['trust']
+        }
+      ],
+      checkout: [
+        {
+          title: 'Reduce sign-in friction',
+          body: 'Make guest checkout clearly available and position account value as an optional benefit.',
+          features: ['guestCheckout']
+        },
+        {
+          title: 'Show checkout progress',
+          body: 'Give shoppers a simple path through contact, fulfillment, payment, and review.',
+          features: ['progress']
+        },
+        {
+          title: 'Broaden payment confidence',
+          body: 'Expose payment choices and security messaging before final review.',
+          features: ['paymentOptions', 'trust']
+        }
+      ],
+      mobile: [
+        {
+          title: 'Keep the next action in thumb reach',
+          body: 'Use a sticky mobile CTA with total context so shoppers do not lose momentum while scrolling.',
+          features: ['mobileSticky']
+        },
+        {
+          title: 'Simplify form entry',
+          body: 'Start address work with ZIP or selected fulfillment context before expanding the full form.',
+          features: ['addressSimplify']
+        },
+        {
+          title: 'Condense confidence cues',
+          body: 'Use compact trust and fulfillment cues that do not bury the primary action.',
+          features: ['trust', 'pickupDefault']
+        }
+      ]
+    };
+    let versions = [];
+    let activeVersion = null;
+    let activeView = 'cart';
+    let compareA = 'baseline';
+    let compareB = 'pickup-clarity';
+    let screenshots = {};
+    let activeScreenshotSlot = 'cart';
+    let showReferencePanel = true;
+    let toastTimer = null;
+
+    const els = {
+      prototypeStage: document.getElementById('prototypeStage'),
+      metricsStrip: document.getElementById('metricsStrip'),
+      versionSelect: document.getElementById('versionSelect'),
+      versionList: document.getElementById('versionList'),
+      componentGrid: document.getElementById('componentGrid'),
+      activeCount: document.getElementById('activeCount'),
+      promptInput: document.getElementById('promptInput'),
+      generateBtn: document.getElementById('generateBtn'),
+      saveBtn: document.getElementById('saveBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      exportBtn: document.getElementById('exportBtn'),
+      promptChips: document.getElementById('promptChips'),
+      draftStatus: document.getElementById('draftStatus'),
+      notesField: document.getElementById('notesField'),
+      notesStatus: document.getElementById('notesStatus'),
+      notesToggle: document.getElementById('notesToggle'),
+      referenceToggle: document.getElementById('referenceToggle'),
+      referenceBoard: document.getElementById('referenceBoard'),
+      screenshotFocus: document.getElementById('screenshotFocus'),
+      screenshotCount: document.getElementById('screenshotCount'),
+      screenshotPreviewGrid: document.getElementById('screenshotPreviewGrid'),
+      screenshotUploadGrid: document.getElementById('screenshotUploadGrid'),
+      cartTab: document.getElementById('cartTab'),
+      checkoutTab: document.getElementById('checkoutTab'),
+      compareTab: document.getElementById('compareTab'),
+      compareView: document.getElementById('compareView'),
+      compareA: document.getElementById('compareA'),
+      compareB: document.getElementById('compareB'),
+      compareAPane: document.getElementById('compareAPane'),
+      compareBPane: document.getElementById('compareBPane'),
+      compareATitle: document.getElementById('compareATitle'),
+      compareBTitle: document.getElementById('compareBTitle'),
+      compareAScore: document.getElementById('compareAScore'),
+      compareBScore: document.getElementById('compareBScore'),
+      diffList: document.getElementById('diffList'),
+      swapCompareBtn: document.getElementById('swapCompareBtn'),
+      versionCount: document.getElementById('versionCount'),
+      toast: document.getElementById('toast')
+    };
+
+    function cloneVersion(version) {
+      return JSON.parse(JSON.stringify(version));
+    }
+
+    function initState() {
+      const saved = loadSaved();
+      screenshots = loadScreenshots();
+      versions = [cloneVersion(baselineVersion), ...starterVersions.map(cloneVersion)];
+      if (saved && Array.isArray(saved.versions)) {
+        const savedCustom = saved.versions.filter(v => v && v.id && v.id !== 'baseline' && !versions.some(existing => existing.id === v.id));
+        versions = [...versions, ...savedCustom];
+      }
+      const activeId = saved?.activeId && versions.some(v => v.id === saved.activeId) ? saved.activeId : 'baseline';
+      activeVersion = cloneVersion(versions.find(v => v.id === activeId) || baselineVersion);
+      activeView = saved?.activeView || 'cart';
+      compareA = saved?.compareA || 'baseline';
+      compareB = saved?.compareB || 'pickup-clarity';
+      if (!versions.some(v => v.id === compareA)) compareA = 'baseline';
+      if (!versions.some(v => v.id === compareB)) compareB = versions[1]?.id || 'baseline';
+      showReferencePanel = saved?.showReferencePanel !== false;
+      activeScreenshotSlot = saved?.activeScreenshotSlot || firstAvailableScreenshotSlot() || 'cart';
+      els.referenceToggle.checked = showReferencePanel;
+      els.promptInput.value = activeVersion.prompt || '';
+      els.notesField.value = activeVersion.notes || '';
+      renderAll();
+    }
+
+    function loadSaved() {
+      try {
+        return JSON.parse(localStorage.getItem(storageKey));
+      } catch (error) {
+        return null;
+      }
+    }
+
+    function loadScreenshots() {
+      try {
+        return JSON.parse(localStorage.getItem(screenshotStorageKey)) || {};
+      } catch (error) {
+        return {};
+      }
+    }
+
+    function persist() {
+      const customVersions = versions.filter(v => !['baseline', 'pickup-clarity', 'mobile-confidence'].includes(v.id));
+      localStorage.setItem(storageKey, JSON.stringify({
+        versions: customVersions,
+        activeId: activeVersion.id,
+        activeView,
+        compareA,
+        compareB,
+        activeScreenshotSlot,
+        showReferencePanel
+      }));
+    }
+
+    function persistScreenshots() {
+      try {
+        localStorage.setItem(screenshotStorageKey, JSON.stringify(screenshots));
+      } catch (error) {
+        showToast('Screenshot is too large for local storage. Try a smaller or cropped image.');
+      }
+    }
+
+    function money(value) {
+      return '$' + value.toFixed(2);
+    }
+
+    function subtotal() {
+      return products.reduce((sum, item) => sum + item.price * item.qty, 0);
+    }
+
+    function scoreVersion(version) {
+      const active = activeFeatureKeys(version);
+      const clarity = 58 + active.length * 4 + (version.features.savings ? 7 : 0) + (version.features.progress ? 5 : 0);
+      const confidence = 52 + (version.features.trust ? 14 : 0) + (version.features.stockConfidence ? 12 : 0) + (version.features.pickupDefault ? 7 : 0);
+      const effort = Math.max(24, 62 - active.length * 3 - (version.features.guestCheckout ? 10 : 0) - (version.features.addressSimplify ? 8 : 0));
+      return {
+        clarity: Math.min(96, clarity),
+        confidence: Math.min(97, confidence),
+        effort: Math.max(18, effort),
+        active: active.length
+      };
+    }
+
+    function activeFeatureKeys(version = activeVersion) {
+      return Object.keys(version.features).filter(key => version.features[key]);
+    }
+
+    function getVersion(id) {
+      return versions.find(v => v.id === id) || baselineVersion;
+    }
+
+    function renderAll() {
+      renderTabs();
+      renderMetrics();
+      renderVersionControls();
+      renderComponents();
+      renderPromptChips();
+      renderScreenshots();
+      renderPrototype();
+      renderCompare();
+      els.activeCount.textContent = `${activeFeatureKeys().length} active`;
+      els.draftStatus.textContent = activeVersion.saved === false ? 'Draft' : 'Saved';
+      els.versionCount.textContent = `${versions.length} versions`;
+      els.notesField.value = activeVersion.notes || '';
+      persist();
+    }
+
+    function renderTabs() {
+      const isCompare = activeView === 'compare';
+      els.cartTab.setAttribute('aria-pressed', activeView === 'cart' ? 'true' : 'false');
+      els.checkoutTab.setAttribute('aria-pressed', activeView === 'checkout' ? 'true' : 'false');
+      els.compareTab.setAttribute('aria-pressed', isCompare ? 'true' : 'false');
+      els.prototypeStage.style.display = isCompare ? 'none' : 'block';
+      els.metricsStrip.style.display = isCompare ? 'none' : 'grid';
+      els.compareView.style.display = isCompare ? 'grid' : 'none';
+    }
+
+    function renderMetrics() {
+      const score = scoreVersion(activeVersion);
+      els.metricsStrip.innerHTML = `
+        <article class="metric">
+          <span>Active changes</span>
+          <strong>${score.active}</strong>
+          <small>${activeFeatureKeys().map(labelForFeature).slice(0, 2).join(', ') || 'Baseline control'}</small>
+        </article>
+        <article class="metric">
+          <span>Clarity score</span>
+          <strong>${score.clarity}</strong>
+          <small>Total, next step, and checkout path visibility</small>
+        </article>
+        <article class="metric">
+          <span>Confidence score</span>
+          <strong>${score.confidence}</strong>
+          <small>Pickup, stock, return, and secure payment cues</small>
+        </article>
+        <article class="metric">
+          <span>Effort index</span>
+          <strong>${score.effort}</strong>
+          <small>Lower is easier for checkout completion</small>
+        </article>
+      `;
+    }
+
+    function labelForFeature(key) {
+      return featureCatalog.find(feature => feature.key === key)?.label || key;
+    }
+
+    function renderVersionControls() {
+      const options = versions.map(version => `<option value="${version.id}" ${version.id === activeVersion.id ? 'selected' : ''}>${escapeHtml(version.name)}</option>`).join('');
+      els.versionSelect.innerHTML = options;
+      els.compareA.innerHTML = versions.map(version => `<option value="${version.id}" ${version.id === compareA ? 'selected' : ''}>${escapeHtml(version.name)}</option>`).join('');
+      els.compareB.innerHTML = versions.map(version => `<option value="${version.id}" ${version.id === compareB ? 'selected' : ''}>${escapeHtml(version.name)}</option>`).join('');
+      els.versionList.innerHTML = versions.map(version => `
+        <button class="version-item ${version.id === activeVersion.id ? 'active' : ''}" type="button" data-version-id="${version.id}">
+          <strong>${escapeHtml(version.name)}</strong>
+          <span>${escapeHtml(version.prompt)}</span>
+          <span>${activeFeatureKeys(version).length} changes - ${escapeHtml(version.created || 'Saved version')}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderComponents() {
+      els.componentGrid.innerHTML = featureCatalog.map(feature => `
+        <button class="component-btn ${activeVersion.features[feature.key] ? 'active' : ''}" type="button" data-feature="${feature.key}" title="${escapeHtml(feature.note)}">
+          ${feature.icon}
+          <span>${escapeHtml(feature.label)}</span>
+        </button>
+      `).join('');
+    }
+
+    function renderPromptChips() {
+      if (els.promptChips.childElementCount) return;
+      els.promptChips.innerHTML = promptChips.map(prompt => `
+        <button class="chip-btn" type="button" data-prompt="${escapeHtml(prompt)}">${escapeHtml(prompt)}</button>
+      `).join('');
+    }
+
+    function renderScreenshots() {
+      const addedCount = screenshotSlots.filter(slot => screenshots[slot.key]?.dataUrl).length;
+      els.screenshotCount.textContent = `${addedCount} added`;
+      els.referenceBoard.hidden = !showReferencePanel;
+      if (!screenshots[activeScreenshotSlot]?.dataUrl && firstAvailableScreenshotSlot()) {
+        activeScreenshotSlot = firstAvailableScreenshotSlot();
+      }
+
+      els.screenshotUploadGrid.innerHTML = screenshotSlots.map(slot => {
+        const shot = screenshots[slot.key];
+        return `
+          <label class="screenshot-dropzone" data-shot-slot="${slot.key}">
+            ${icons.image}
+            <span>
+              <strong>${escapeHtml(slot.label)}</strong>
+              <span>${shot ? escapeHtml(shot.name) : escapeHtml(slot.helper)}</span>
+            </span>
+            <span class="badge ${shot ? '' : 'blue'}">${shot ? 'Replace' : 'Add'}</span>
+            <input type="file" accept="image/*" data-shot-input="${slot.key}" aria-label="Upload ${escapeHtml(slot.label)} screenshot">
+          </label>
+        `;
+      }).join('');
+
+      renderScreenshotFocus();
+
+      els.screenshotPreviewGrid.innerHTML = screenshotSlots.map(slot => {
+        const shot = screenshots[slot.key];
+        if (!shot?.dataUrl) {
+          return `
+            <article class="screenshot-card empty">
+              <div class="screenshot-card-head">
+                <span>${escapeHtml(slot.label)}</span>
+                <span class="badge blue">Empty</span>
+              </div>
+              <div class="screenshot-empty">Add a screenshot to compare the live TSC experience against this prototype.</div>
+            </article>
+          `;
+        }
+        return `
+          <article class="screenshot-card ${activeScreenshotSlot === slot.key ? 'selected' : ''}">
+            <div class="screenshot-card-head">
+              <button class="shot-tab" type="button" data-focus-shot="${slot.key}" aria-pressed="${activeScreenshotSlot === slot.key ? 'true' : 'false'}" title="Focus ${escapeHtml(slot.label)} screenshot">
+                ${escapeHtml(slot.label)}
+              </button>
+              <button class="remove-shot-btn" type="button" data-remove-shot="${slot.key}" title="Remove ${escapeHtml(slot.label)} screenshot">
+                <svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true"><path d="m18 6-12 12M6 6l12 12" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+                <span class="sr-only">Remove ${escapeHtml(slot.label)} screenshot</span>
+              </button>
+            </div>
+            <div class="screenshot-image-wrap">
+              <img src="${shot.dataUrl}" alt="${escapeHtml(slot.label)} reference screenshot">
+            </div>
+            <div class="screenshot-meta">
+              <span>${shot.width} x ${shot.height}</span>
+              <span>${escapeHtml(shot.added || 'Uploaded')}</span>
+            </div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function renderScreenshotFocus() {
+      const activeSlot = screenshotSlots.find(slot => slot.key === activeScreenshotSlot) || screenshotSlots[0];
+      const shot = screenshots[activeSlot.key];
+      const suggestions = screenshotSuggestionMap[activeSlot.key] || screenshotSuggestionMap.cart;
+      const picker = screenshotSlots.map(slot => `
+        <button class="shot-tab" type="button" data-focus-shot="${slot.key}" aria-pressed="${activeScreenshotSlot === slot.key ? 'true' : 'false'}">
+          ${escapeHtml(slot.label)}
+        </button>
+      `).join('');
+
+      els.screenshotFocus.innerHTML = `
+        <div class="screenshot-focus">
+          <article class="focus-image-card">
+            <div class="focus-image-head">
+              <strong>${escapeHtml(activeSlot.label)} focus</strong>
+              <span>${shot ? `${escapeHtml(shot.name)} - ${shot.width} x ${shot.height}` : 'No screenshot added yet'}</span>
+            </div>
+            ${shot?.dataUrl ? `
+              <div class="focus-image-wrap">
+                <img src="${shot.dataUrl}" alt="${escapeHtml(activeSlot.label)} focused reference screenshot">
+              </div>
+            ` : `
+              <div class="focus-empty">
+                ${icons.image}
+                <strong>Add a ${escapeHtml(activeSlot.label.toLowerCase())} screenshot above.</strong>
+                <span>Once added, it will appear here as the main evidence surface for UX suggestions.</span>
+              </div>
+            `}
+          </article>
+          <aside class="insight-panel">
+            <div class="insight-head">
+              <strong>Suggested improvements</strong>
+              <span>${shot ? 'Based on the selected screenshot type' : 'Ready after upload'}</span>
+            </div>
+            <div class="screenshot-picker">${picker}</div>
+            <div class="insight-list">
+              ${suggestions.map(item => `
+                <div class="insight-card">
+                  <strong>${escapeHtml(item.title)}</strong>
+                  <span>${escapeHtml(item.body)}</span>
+                </div>
+              `).join('')}
+            </div>
+            <div class="focus-actions">
+              <button class="primary-btn" type="button" id="applyScreenshotSuggestions" ${shot ? '' : 'disabled'}>
+                ${icons.check}
+                Apply to prototype
+              </button>
+              <button class="ghost-btn" type="button" id="sendSuggestionsToPrompt" ${shot ? '' : 'disabled'}>
+                ${icons.list}
+                Put in prompt
+              </button>
+            </div>
+          </aside>
+        </div>
+      `;
+    }
+
+    function firstAvailableScreenshotSlot() {
+      return screenshotSlots.find(slot => screenshots[slot.key]?.dataUrl)?.key;
+    }
+
+    function renderPrototype() {
+      const showNotes = els.notesToggle.checked;
+      els.prototypeStage.classList.toggle('show-notes', showNotes);
+      els.prototypeStage.innerHTML = activeView === 'checkout'
+        ? renderCheckout(activeVersion)
+        : renderCart(activeVersion);
+    }
+
+    function renderCompare() {
+      const left = getVersion(compareA);
+      const right = getVersion(compareB);
+      els.compareATitle.textContent = left.name;
+      els.compareBTitle.textContent = right.name;
+      els.compareAScore.textContent = `${scoreVersion(left).clarity} clarity`;
+      els.compareBScore.textContent = `${scoreVersion(right).clarity} clarity`;
+      els.compareAPane.innerHTML = renderCart(left, true);
+      els.compareBPane.innerHTML = renderCart(right, true);
+      els.diffList.innerHTML = diffVersions(left, right).map(item => `
+        <li>${icons.check}<span>${escapeHtml(item)}</span></li>
+      `).join('');
+    }
+
+    function renderCart(version, mini = false) {
+      const features = version.features;
+      return `
+        <div class="cart-shell ${features.mobileSticky ? 'has-sticky' : ''}">
+          ${renderStoreHeader()}
+          ${renderExperienceBanner(version)}
+          <div class="prototype-body">
+            <div class="cart-main">
+              <div class="page-title">
+                <h1>Cart</h1>
+                <span>${products.length} items - Franklin, TN store</span>
+              </div>
+              ${renderFulfillmentSwitch(features)}
+              <div class="product-list">
+                ${products.map(product => renderProduct(product, features)).join('')}
+              </div>
+              ${features.trust ? renderTrustRow() : ''}
+            </div>
+            <aside class="summary-column">
+              ${renderSummary(features, 'cart')}
+            </aside>
+          </div>
+          ${renderStickyCta(features)}
+        </div>
+      `;
+    }
+
+    function renderCheckout(version) {
+      const features = version.features;
+      return `
+        <div class="cart-shell">
+          ${renderStoreHeader()}
+          ${features.progress ? renderProgress() : ''}
+          ${renderExperienceBanner(version)}
+          <div class="prototype-body">
+            <div class="checkout-main">
+              <div class="page-title">
+                <h1>Checkout</h1>
+                <span>${features.guestCheckout ? 'Guest checkout available' : 'Sign in recommended'}</span>
+              </div>
+              ${renderContactSection(features)}
+              ${renderFulfillmentSection(features)}
+              ${renderPaymentSection(features)}
+              ${features.trust ? renderTrustRow() : ''}
+            </div>
+            <aside class="summary-column">
+              ${renderSummary(features, 'checkout')}
+            </aside>
+          </div>
+          ${renderStickyCta(features)}
+        </div>
+      `;
+    }
+
+    function renderStoreHeader() {
+      return `
+        <header class="store-header">
+          <div class="store-logo"><span class="logo-box">TSC</span><span>Tractor Supply Co.</span></div>
+          <nav class="store-nav" aria-label="Store navigation">
+            <span>Shop</span>
+            <span>Pet</span>
+            <span>Farm & Ranch</span>
+            <span>Outdoor</span>
+          </nav>
+          <div class="store-cart">${icons.pickup}<span>Cart ${money(total())}</span></div>
+        </header>
+      `;
+    }
+
+    function renderExperienceBanner(version) {
+      const features = version.features;
+      let headline = 'Standard checkout flow';
+      let body = 'Cart and checkout use the baseline layout for comparison.';
+      if (features.pickupDefault && features.stockConfidence) {
+        headline = 'Pickup-first experience';
+        body = 'Store availability, pickup timing, and curbside loading expectations are visible before checkout.';
+      } else if (features.guestCheckout || features.mobileSticky) {
+        headline = 'Lower-friction checkout';
+        body = 'Guest path, progress clarity, and mobile CTA placement reduce effort before payment.';
+      } else if (features.trust || features.savings) {
+        headline = 'Confidence-focused checkout';
+        body = 'Security, returns, and total clarity are moved closer to checkout decisions.';
+      }
+      return `
+        <section class="experience-banner">
+          <div>
+            <strong>${escapeHtml(headline)}</strong>
+            <span>${escapeHtml(body)}</span>
+          </div>
+          <span class="banner-status">${activeFeatureKeys(version).length} UX changes</span>
+        </section>
+      `;
+    }
+
+    function renderProgress() {
+      return `
+        <div class="checkout-progress" aria-label="Checkout progress">
+          <div class="progress-step active"><span class="progress-dot">1</span><span>Contact</span></div>
+          <div class="progress-step active"><span class="progress-dot">2</span><span>Fulfillment</span></div>
+          <div class="progress-step"><span class="progress-dot">3</span><span>Payment</span></div>
+          <div class="progress-step"><span class="progress-dot">4</span><span>Review</span></div>
+        </div>
+      `;
+    }
+
+    function renderFulfillmentSwitch(features) {
+      const pickupSelected = features.pickupDefault;
+      return `
+        <section class="fulfillment-switch" aria-label="Fulfillment options">
+          <article class="fulfillment-card ${pickupSelected ? 'selected' : ''}">
+            <strong>${icons.pickup} Free store pickup</strong>
+            <span>${pickupSelected ? 'Ready today at Franklin with curbside loading.' : 'Pick up select items at your local store.'}</span>
+            ${pickupSelected ? '<span class="badge">Recommended</span>' : ''}
+            <div class="annotation">Pickup is promoted as the default path for baskets with locally available items.</div>
+          </article>
+          <article class="fulfillment-card ${pickupSelected ? '' : 'selected'}">
+            <strong>${icons.home} Ship to home</strong>
+            <span>${features.savings ? 'Shipping estimate and fees stay visible before checkout.' : 'Estimated delivery shown after address entry.'}</span>
+            ${features.savings ? '<span class="badge amber">Fee preview</span>' : ''}
+            <div class="annotation">Shipping cost clarity protects trust when the shopper compares pickup against delivery.</div>
+          </article>
+        </section>
+      `;
+    }
+
+    function renderProduct(product, features) {
+      return `
+        <article class="product-row">
+          <div class="product-media" aria-hidden="true">${renderProductArt(product.image)}</div>
+          <div class="product-info">
+            <h2>${escapeHtml(product.name)}</h2>
+            <div class="product-meta">
+              <span>${escapeHtml(product.sku)}</span>
+              ${product.meta.map(meta => `<span>- ${escapeHtml(meta)}</span>`).join('')}
+            </div>
+            ${features.stockConfidence ? `
+              <div class="stock-line">
+                ${icons.check}
+                <span>${escapeHtml(product.pickup)}</span>
+                <span class="badge blue">${escapeHtml(product.location)}</span>
+              </div>
+              <div class="annotation">Availability detail is anchored to the item so shoppers know which products are truly ready.</div>
+            ` : `
+              <div class="stock-line"><span>Availability shown in checkout</span></div>
+            `}
+          </div>
+          <div class="product-price">
+            <strong>${money(product.price * product.qty)}</strong>
+            <div class="qty-control" aria-label="Quantity">
+              <button type="button" tabindex="-1">-</button>
+              <span>${product.qty}</span>
+              <button type="button" tabindex="-1">+</button>
+            </div>
+          </div>
+        </article>
+      `;
+    }
+
+    function renderProductArt(type) {
+      if (type === 'feed') {
+        return `
+          <svg viewBox="0 0 120 120" role="img" aria-label="Dog food bag">
+            <rect x="29" y="13" width="62" height="92" rx="8" fill="#d8b06d"/>
+            <path d="M33 22h54l-5 18H38z" fill="#7e2d23"/>
+            <rect x="40" y="48" width="40" height="28" rx="4" fill="#fff6df"/>
+            <circle cx="60" cy="62" r="12" fill="#8f5c2f"/>
+            <path d="M45 88h30" stroke="#5b3a1f" stroke-width="5" stroke-linecap="round"/>
+            <path d="M40 31h40" stroke="#fff6df" stroke-width="5" stroke-linecap="round"/>
+          </svg>
+        `;
+      }
+      if (type === 'glove') {
+        return `
+          <svg viewBox="0 0 120 120" role="img" aria-label="Work gloves">
+            <path d="M52 22c8 2 11 11 12 21l2 20 10-18c5-9 18-2 13 8L75 85c-6 13-24 18-38 7-10-8-12-23-4-36l10-17c3-6 5-12 9-17Z" fill="#a86135"/>
+            <path d="M50 25c-7 16-3 39 11 60" fill="none" stroke="#69361e" stroke-width="4" stroke-linecap="round"/>
+            <path d="M36 89h40l-3 16H39z" fill="#223f5c"/>
+            <path d="M72 48c9-6 16-2 16 5" fill="none" stroke="#69361e" stroke-width="4" stroke-linecap="round"/>
+          </svg>
+        `;
+      }
+      return `
+        <svg viewBox="0 0 120 120" role="img" aria-label="Utility tub">
+          <ellipse cx="60" cy="34" rx="42" ry="16" fill="#2d5b72"/>
+          <path d="M19 35h82L89 94c-2 9-13 15-29 15s-27-6-29-15Z" fill="#34718f"/>
+          <ellipse cx="60" cy="36" rx="32" ry="9" fill="#d4edf6"/>
+          <path d="M29 55c16 8 45 9 62 0" fill="none" stroke="#1c4256" stroke-width="4" stroke-linecap="round"/>
+          <path d="M38 78c13 5 32 5 45 0" fill="none" stroke="#1c4256" stroke-width="4" stroke-linecap="round"/>
+        </svg>
+      `;
+    }
+
+    function renderContactSection(features) {
+      return `
+        <section class="checkout-section">
+          <div class="section-title">
+            <h2>Contact</h2>
+            <span>${features.guestCheckout ? 'Account optional' : 'Sign-in first'}</span>
+          </div>
+          <div class="choice-row">
+            <div class="choice-box ${features.guestCheckout ? 'selected' : ''}">
+              <strong>Continue as guest</strong>
+              <span>${features.guestCheckout ? 'Email receipt and pickup alerts only.' : 'Available after sign-in prompt.'}</span>
+            </div>
+            <div class="choice-box ${features.guestCheckout ? '' : 'selected'}">
+              <strong>Sign in to Neighbor's Club</strong>
+              <span>Earn points, save addresses, and manage orders.</span>
+            </div>
+          </div>
+          <div class="field-grid">
+            <div class="fake-field"><label>Email</label><div class="fake-input">name@example.com</div></div>
+            <div class="fake-field"><label>Mobile phone</label><div class="fake-input">(555) 123-4567</div></div>
+          </div>
+          <div class="annotation">Guest checkout reframes sign-in as an optional loyalty benefit instead of a gate.</div>
+        </section>
+      `;
+    }
+
+    function renderFulfillmentSection(features) {
+      if (features.pickupDefault) {
+        return `
+          <section class="checkout-section">
+            <div class="section-title">
+              <h2>Fulfillment</h2>
+              <span>Franklin, TN</span>
+            </div>
+            <div class="inline-alert">${icons.pickup}<span>All items ready today. Curbside loading available until 8 PM.</span></div>
+            <div class="choice-row">
+              <div class="choice-box selected">
+                <strong>Free store pickup</strong>
+                <span>Hold order for 48 hours. Bring ID and order email.</span>
+              </div>
+              <div class="choice-box">
+                <strong>Ship eligible items</strong>
+                <span>Delivery fees update after address confirmation.</span>
+              </div>
+            </div>
+            <div class="annotation">Pickup details are written like operational promises: ready time, hold period, and loading support.</div>
+          </section>
+        `;
+      }
+      return `
+        <section class="checkout-section">
+          <div class="section-title">
+            <h2>Fulfillment</h2>
+            <span>Delivery address</span>
+          </div>
+          <div class="field-grid">
+            <div class="fake-field"><label>${features.addressSimplify ? 'ZIP code' : 'Street address'}</label><div class="fake-input">${features.addressSimplify ? '37064' : '123 Farm Road'}</div></div>
+            <div class="fake-field"><label>${features.addressSimplify ? 'Delivery method' : 'Apartment, suite, etc.'}</label><div class="fake-input">${features.addressSimplify ? 'Standard delivery' : 'Optional'}</div></div>
+            <div class="fake-field"><label>City</label><div class="fake-input">Franklin</div></div>
+            <div class="fake-field"><label>State</label><div class="fake-input">TN</div></div>
+          </div>
+          ${features.addressSimplify ? '<div class="inline-alert">' + icons.check + '<span>Pickup remains available for all items at Franklin store.</span></div>' : ''}
+          <div class="annotation">Address assist asks for location context first, then expands only when delivery is selected.</div>
+        </section>
+      `;
+    }
+
+    function renderPaymentSection(features) {
+      return `
+        <section class="checkout-section">
+          <div class="section-title">
+            <h2>Payment</h2>
+            <span>${features.paymentOptions ? 'Multiple options' : 'Card entry'}</span>
+          </div>
+          ${features.paymentOptions ? `
+            <div class="payment-rail">
+              <div class="payment-pill">Credit card</div>
+              <div class="payment-pill">PayPal</div>
+              <div class="payment-pill">Pay in 4</div>
+            </div>
+          ` : ''}
+          <div class="field-grid">
+            <div class="fake-field"><label>Card number</label><div class="fake-input">4111 1111 1111 1111</div></div>
+            <div class="fake-field"><label>Expiration</label><div class="fake-input">MM / YY</div></div>
+            <div class="fake-field"><label>Security code</label><div class="fake-input">CVV</div></div>
+            <div class="fake-field"><label>Billing ZIP</label><div class="fake-input">37064</div></div>
+          </div>
+          ${features.trust ? '<div class="inline-alert">' + icons.shield + '<span>Payment is encrypted. Returns accepted in store or by mail.</span></div>' : ''}
+          <div class="annotation">Payment trust language sits inside payment, where shoppers are deciding whether to continue.</div>
+        </section>
+      `;
+    }
+
+    function renderSummary(features, context) {
+      const sub = subtotal();
+      const pickupSavings = features.pickupDefault ? 14.95 : 0;
+      const neighborSavings = features.savings ? 8.5 : 0;
+      const delivery = features.pickupDefault ? 0 : 12.95;
+      const tax = 7.42;
+      const totalValue = sub + delivery + tax - pickupSavings - neighborSavings;
+      return `
+        <section class="order-summary">
+          <h2>Order summary</h2>
+          ${features.promoInline ? `
+            <div class="promo-box">
+              <span>Promo or Neighbor's Club reward</span>
+              <button class="ghost-btn" type="button" tabindex="-1">Apply</button>
+            </div>
+          ` : ''}
+          <div class="summary-line"><span>Subtotal</span><strong>${money(sub)}</strong></div>
+          ${features.savings ? `<div class="summary-line savings"><span>Neighbor's Club savings</span><strong>-${money(neighborSavings)}</strong></div>` : ''}
+          ${features.pickupDefault ? `<div class="summary-line savings"><span>Pickup savings</span><strong>-${money(pickupSavings)}</strong></div>` : `<div class="summary-line"><span>Estimated shipping</span><strong>${money(delivery)}</strong></div>`}
+          <div class="summary-line"><span>Estimated tax</span><strong>${features.savings ? money(tax) : 'Calculated later'}</strong></div>
+          <div class="summary-line total"><span>Total</span><strong>${money(totalValue)}</strong></div>
+          <button class="primary-btn" type="button" tabindex="-1">${context === 'cart' ? 'Proceed to checkout' : 'Place order'}</button>
+          <div class="annotation">The summary makes savings, fees, and tax visible before the high-commitment action.</div>
+        </section>
+      `;
+    }
+
+    function renderTrustRow() {
+      return `
+        <section class="trust-row" aria-label="Checkout reassurance">
+          <div class="trust-item">${icons.shield}<span><strong>Secure checkout</strong><br>Encrypted payment details</span></div>
+          <div class="trust-item">${icons.pickup}<span><strong>Free pickup</strong><br>Ready today where available</span></div>
+          <div class="trust-item">${icons.check}<span><strong>Easy returns</strong><br>In store or by mail</span></div>
+        </section>
+      `;
+    }
+
+    function renderStickyCta(features) {
+      return `
+        <div class="sticky-checkout ${features.mobileSticky ? 'enabled' : ''}">
+          <div><strong>Total ${money(total())}</strong><span>Pickup and tax details included</span></div>
+          <button class="primary-btn" type="button" tabindex="-1">Checkout</button>
+        </div>
+      `;
+    }
+
+    function total() {
+      return subtotal() + 12.95 + 7.42;
+    }
+
+    function deriveVersionFromPrompt(prompt) {
+      const lower = prompt.toLowerCase();
+      const features = { ...activeVersion.features };
+      const asksForFresh = /(start over|baseline|reset|from scratch|control)/.test(lower);
+      if (asksForFresh) {
+        Object.keys(features).forEach(key => features[key] = false);
+      }
+
+      featureCatalog.forEach(feature => {
+        const matched = feature.keywords.some(keyword => lower.includes(keyword));
+        if (matched) features[feature.key] = true;
+      });
+
+      if (/(remove|hide|without|no)\s+(promo|coupon|discount code)/.test(lower)) features.promoInline = false;
+      if (/(remove|hide|without|no)\s+(progress|stepper|steps)/.test(lower)) features.progress = false;
+      if (/(remove|hide|without|no)\s+(trust|security|secure)/.test(lower)) features.trust = false;
+      if (/(mobile|phone|small screen|thumb)/.test(lower)) features.mobileSticky = true;
+      if (/(rural|heavy|haul|curbside|loading|life out here)/.test(lower)) {
+        features.pickupDefault = true;
+        features.stockConfidence = true;
+      }
+      if (/(clear|clarify|transparent|explain|show).*(total|fees|tax|savings)/.test(lower)) features.savings = true;
+      if (activeFeatureKeys({ features }).length === activeFeatureKeys(activeVersion).length && !asksForFresh) {
+        features.pickupDefault = true;
+        features.trust = true;
+        features.savings = true;
+      }
+
+      const activeLabels = Object.keys(features).filter(key => features[key]).map(labelForFeature);
+      const name = activeLabels.length ? titleFromFeatures(activeLabels) : 'Baseline variant';
+      return {
+        id: `draft-${Date.now()}`,
+        name,
+        prompt: prompt.trim() || 'Manual checkout variation',
+        created: 'Draft',
+        features,
+        notes: makeNotes(features, prompt),
+        saved: false
+      };
+    }
+
+    function titleFromFeatures(labels) {
+      if (labels.includes('Pickup first') && labels.includes('Stock confidence')) return 'Pickup confidence';
+      if (labels.includes('Guest path') && labels.includes('Sticky CTA')) return 'Mobile guest path';
+      if (labels.includes('Savings clarity') && labels.includes('Trust proof')) return 'Clear total trust';
+      return labels.slice(0, 2).join(' + ');
+    }
+
+    function makeNotes(features, prompt) {
+      const active = Object.keys(features).filter(key => features[key]);
+      const benefits = active.map(key => featureCatalog.find(feature => feature.key === key)?.note).filter(Boolean);
+      return [
+        `Prompt: ${prompt.trim() || 'Manual checkout variation'}`,
+        '',
+        `Hypothesis: ${hypothesisFor(features)}`,
+        '',
+        `Primary UX changes: ${active.map(labelForFeature).join(', ') || 'Baseline control'}.`,
+        '',
+        `Watchouts: Confirm the added guidance does not crowd item rows on mobile. Validate that order-total clarity does not overemphasize savings at the expense of checkout speed.`,
+        '',
+        benefits.slice(0, 3).map(note => `- ${note}`).join('\\n')
+      ].join('\\n');
+    }
+
+    function hypothesisFor(features) {
+      if (features.pickupDefault && features.stockConfidence) return 'Local availability cues will increase checkout starts for shoppers who need same-day pickup.';
+      if (features.guestCheckout && features.mobileSticky) return 'A lighter mobile path will reduce abandonment before payment.';
+      if (features.trust && features.savings) return 'Trust and total transparency will reduce hesitation at the checkout CTA.';
+      return 'A focused checkout variation will make the next action clearer than the baseline.';
+    }
+
+    function diffVersions(left, right) {
+      const rows = [];
+      featureCatalog.forEach(feature => {
+        const a = Boolean(left.features[feature.key]);
+        const b = Boolean(right.features[feature.key]);
+        if (a !== b) {
+          rows.push(`${feature.label}: ${a ? left.name : right.name} includes it; ${a ? right.name : left.name} does not.`);
+        }
+      });
+      if (!rows.length) {
+        rows.push('No component differences. Compare notes, prompt intent, or visual density before saving another variant.');
+      }
+      const leftScore = scoreVersion(left);
+      const rightScore = scoreVersion(right);
+      rows.push(`${right.name} clarity score is ${rightScore.clarity}; ${left.name} clarity score is ${leftScore.clarity}.`);
+      rows.push(`${right.name} effort index is ${rightScore.effort}; ${left.name} effort index is ${leftScore.effort}.`);
+      return rows;
+    }
+
+    async function addScreenshot(slotKey, file) {
+      const slot = screenshotSlots.find(item => item.key === slotKey);
+      if (!slot || !file) return;
+      if (!file.type.startsWith('image/')) {
+        showToast('Please add an image file.');
+        return;
+      }
+
+      try {
+        const shot = await compressScreenshot(file);
+        screenshots[slotKey] = shot;
+        activeScreenshotSlot = slotKey;
+        showReferencePanel = true;
+        els.referenceToggle.checked = true;
+        persistScreenshots();
+        persist();
+        renderScreenshots();
+        showToast(`${slot.label} screenshot added.`);
+      } catch (error) {
+        showToast('Could not read that screenshot. Try a PNG or JPG image.');
+      }
+    }
+
+    function compressScreenshot(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onerror = reject;
+        reader.onload = () => {
+          const image = new Image();
+          image.onerror = reject;
+          image.onload = () => {
+            const maxSide = 1400;
+            const scale = Math.min(1, maxSide / Math.max(image.width, image.height));
+            const width = Math.max(1, Math.round(image.width * scale));
+            const height = Math.max(1, Math.round(image.height * scale));
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            const context = canvas.getContext('2d');
+            context.drawImage(image, 0, 0, width, height);
+            const type = file.type === 'image/png' && file.size < 650000 ? 'image/png' : 'image/jpeg';
+            const dataUrl = type === 'image/jpeg'
+              ? canvas.toDataURL(type, 0.84)
+              : canvas.toDataURL(type);
+            resolve({
+              dataUrl,
+              name: file.name || 'screenshot',
+              width,
+              height,
+              originalWidth: image.width,
+              originalHeight: image.height,
+              originalSize: file.size,
+              added: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+            });
+          };
+          image.src = reader.result;
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function screenshotPromptFor(slotKey) {
+      const slot = screenshotSlots.find(item => item.key === slotKey) || screenshotSlots[0];
+      const suggestions = screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
+      return `Use the uploaded ${slot.label.toLowerCase()} screenshot as the reference. ${suggestions.map(item => item.title).join('. ')}.`;
+    }
+
+    function applyScreenshotSuggestionsToPrototype() {
+      const slot = screenshotSlots.find(item => item.key === activeScreenshotSlot) || screenshotSlots[0];
+      const suggestions = screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
+      const features = { ...activeVersion.features };
+      suggestions.forEach(item => item.features.forEach(featureKey => {
+        features[featureKey] = true;
+      }));
+      const prompt = screenshotPromptFor(slot.key);
+      const shot = screenshots[slot.key];
+      const notes = [
+        `Reference screenshot: ${shot?.name || slot.label}`,
+        '',
+        `Hypothesis: The uploaded ${slot.label.toLowerCase()} shows opportunities to improve clarity, confidence, and checkout momentum.`,
+        '',
+        'Suggested UX changes:',
+        ...suggestions.map(item => `- ${item.title}: ${item.body}`),
+        '',
+        `Prototype changes activated: ${Object.keys(features).filter(key => features[key]).map(labelForFeature).join(', ')}.`
+      ].join('\n');
+
+      activeVersion = {
+        id: `draft-${Date.now()}`,
+        name: `${slot.label} improvements`,
+        prompt,
+        created: 'Draft',
+        features,
+        notes,
+        saved: false
+      };
+      activeView = slot.key === 'checkout' ? 'checkout' : 'cart';
+      els.promptInput.value = prompt;
+      els.notesField.value = notes;
+      showReferencePanel = true;
+      els.referenceToggle.checked = true;
+      renderAll();
+      showToast('Screenshot suggestions applied to the prototype.');
+    }
+
+    function sendScreenshotSuggestionsToPrompt() {
+      const prompt = screenshotPromptFor(activeScreenshotSlot);
+      els.promptInput.value = prompt;
+      els.promptInput.focus();
+      showToast('Screenshot suggestions added to the prompt.');
+    }
+
+    function saveActiveVersion() {
+      const existingIndex = versions.findIndex(version => version.id === activeVersion.id);
+      const savedVersion = {
+        ...cloneVersion(activeVersion),
+        saved: true,
+        created: new Date().toLocaleString([], { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+      };
+      if (savedVersion.id.startsWith('draft-')) {
+        savedVersion.id = `version-${Date.now()}`;
+      }
+      const duplicateNameCount = versions.filter(version => version.name.startsWith(savedVersion.name)).length;
+      if (duplicateNameCount && !versions.some(v => v.id === savedVersion.id)) {
+        savedVersion.name = `${savedVersion.name} ${duplicateNameCount + 1}`;
+      }
+      if (existingIndex >= 0 && versions[existingIndex].id !== 'baseline') {
+        versions[existingIndex] = savedVersion;
+      } else {
+        versions.push(savedVersion);
+      }
+      activeVersion = cloneVersion(savedVersion);
+      showToast('Version saved.');
+      renderAll();
+    }
+
+    function exportConcept() {
+      const score = scoreVersion(activeVersion);
+      const markdown = [
+        `# ${activeVersion.name}`,
+        '',
+        `Prompt: ${activeVersion.prompt}`,
+        '',
+        '## Scores',
+        `- Clarity: ${score.clarity}`,
+        `- Confidence: ${score.confidence}`,
+        `- Effort index: ${score.effort}`,
+        '',
+        '## Active UX changes',
+        ...activeFeatureKeys().map(key => `- ${labelForFeature(key)}: ${featureCatalog.find(feature => feature.key === key).note}`),
+        '',
+        '## Reference screenshots',
+        ...screenshotSlots.map(slot => {
+          const shot = screenshots[slot.key];
+          return shot ? `- ${slot.label}: ${shot.name} (${shot.width} x ${shot.height})` : `- ${slot.label}: not added`;
+        }),
+        '',
+        '## Experiment notes',
+        activeVersion.notes || els.notesField.value || 'No notes captured.'
+      ].join('\\n');
+
+      const blob = new Blob([markdown], { type: 'text/markdown' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${slugify(activeVersion.name)}-concept.md`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+
+      if (navigator.clipboard?.writeText) {
+        navigator.clipboard.writeText(markdown).then(() => showToast('Concept exported and copied to clipboard.')).catch(() => showToast('Concept exported.'));
+      } else {
+        showToast('Concept exported.');
+      }
+    }
+
+    function setActiveView(view) {
+      activeView = view;
+      renderAll();
+    }
+
+    function setActiveVersion(id) {
+      const selected = getVersion(id);
+      activeVersion = cloneVersion(selected);
+      els.promptInput.value = activeVersion.prompt || '';
+      els.notesField.value = activeVersion.notes || '';
+      renderAll();
+    }
+
+    function toggleFeature(key) {
+      const features = { ...activeVersion.features, [key]: !activeVersion.features[key] };
+      activeVersion = {
+        ...cloneVersion(activeVersion),
+        id: activeVersion.saved === false ? activeVersion.id : `draft-${Date.now()}`,
+        name: titleFromFeatures(Object.keys(features).filter(item => features[item]).map(labelForFeature)),
+        prompt: activeVersion.prompt || 'Manual component edits',
+        created: 'Draft',
+        features,
+        notes: makeNotes(features, activeVersion.prompt || 'Manual component edits'),
+        saved: false
+      };
+      renderAll();
+    }
+
+    function showToast(message) {
+      clearTimeout(toastTimer);
+      els.toast.textContent = message;
+      els.toast.classList.add('show');
+      toastTimer = setTimeout(() => els.toast.classList.remove('show'), 2600);
+    }
+
+    function escapeHtml(value) {
+      return String(value)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function slugify(value) {
+      return value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || 'checkout-concept';
+    }
+
+    els.generateBtn.addEventListener('click', () => {
+      activeVersion = deriveVersionFromPrompt(els.promptInput.value);
+      els.notesField.value = activeVersion.notes;
+      if (activeView === 'compare') activeView = 'cart';
+      showToast('Variation generated.');
+      renderAll();
+    });
+
+    els.saveBtn.addEventListener('click', saveActiveVersion);
+    els.resetBtn.addEventListener('click', () => {
+      activeVersion = cloneVersion(baselineVersion);
+      els.promptInput.value = activeVersion.prompt;
+      showToast('Baseline restored.');
+      renderAll();
+    });
+    els.exportBtn.addEventListener('click', exportConcept);
+
+    els.cartTab.addEventListener('click', () => setActiveView('cart'));
+    els.checkoutTab.addEventListener('click', () => setActiveView('checkout'));
+    els.compareTab.addEventListener('click', () => setActiveView('compare'));
+
+    els.versionSelect.addEventListener('change', event => setActiveVersion(event.target.value));
+    els.compareA.addEventListener('change', event => {
+      compareA = event.target.value;
+      renderAll();
+    });
+    els.compareB.addEventListener('change', event => {
+      compareB = event.target.value;
+      renderAll();
+    });
+    els.swapCompareBtn.addEventListener('click', () => {
+      [compareA, compareB] = [compareB, compareA];
+      renderAll();
+    });
+
+    els.versionList.addEventListener('click', event => {
+      const button = event.target.closest('[data-version-id]');
+      if (!button) return;
+      setActiveVersion(button.dataset.versionId);
+    });
+
+    els.componentGrid.addEventListener('click', event => {
+      const button = event.target.closest('[data-feature]');
+      if (!button) return;
+      toggleFeature(button.dataset.feature);
+    });
+
+    els.promptChips.addEventListener('click', event => {
+      const button = event.target.closest('[data-prompt]');
+      if (!button) return;
+      els.promptInput.value = button.dataset.prompt;
+      activeVersion = deriveVersionFromPrompt(els.promptInput.value);
+      els.notesField.value = activeVersion.notes;
+      renderAll();
+    });
+
+    els.notesField.addEventListener('input', () => {
+      activeVersion.notes = els.notesField.value;
+      els.notesStatus.textContent = activeVersion.saved === false ? 'Draft note' : 'Saved locally';
+      persist();
+    });
+
+    els.notesToggle.addEventListener('change', renderPrototype);
+
+    els.referenceToggle.addEventListener('change', () => {
+      showReferencePanel = els.referenceToggle.checked;
+      renderScreenshots();
+      persist();
+    });
+
+    els.screenshotUploadGrid.addEventListener('change', event => {
+      const input = event.target.closest('[data-shot-input]');
+      if (!input || !input.files?.length) return;
+      addScreenshot(input.dataset.shotInput, input.files[0]);
+      input.value = '';
+    });
+
+    els.screenshotUploadGrid.addEventListener('dragover', event => {
+      const zone = event.target.closest('[data-shot-slot]');
+      if (!zone) return;
+      event.preventDefault();
+      zone.classList.add('dragover');
+    });
+
+    els.screenshotUploadGrid.addEventListener('dragleave', event => {
+      const zone = event.target.closest('[data-shot-slot]');
+      if (!zone || zone.contains(event.relatedTarget)) return;
+      zone.classList.remove('dragover');
+    });
+
+    els.screenshotUploadGrid.addEventListener('drop', event => {
+      const zone = event.target.closest('[data-shot-slot]');
+      if (!zone) return;
+      event.preventDefault();
+      zone.classList.remove('dragover');
+      const file = event.dataTransfer?.files?.[0];
+      if (file) addScreenshot(zone.dataset.shotSlot, file);
+    });
+
+    els.screenshotPreviewGrid.addEventListener('click', event => {
+      const focusButton = event.target.closest('[data-focus-shot]');
+      if (focusButton) {
+        activeScreenshotSlot = focusButton.dataset.focusShot;
+        renderScreenshots();
+        persist();
+        return;
+      }
+
+      const button = event.target.closest('[data-remove-shot]');
+      if (!button) return;
+      const slotKey = button.dataset.removeShot;
+      delete screenshots[slotKey];
+      if (activeScreenshotSlot === slotKey) {
+        activeScreenshotSlot = firstAvailableScreenshotSlot() || 'cart';
+      }
+      persistScreenshots();
+      persist();
+      renderScreenshots();
+      showToast('Screenshot removed.');
+    });
+
+    els.referenceBoard.addEventListener('click', event => {
+      const focusButton = event.target.closest('[data-focus-shot]');
+      if (focusButton) {
+        activeScreenshotSlot = focusButton.dataset.focusShot;
+        renderScreenshots();
+        persist();
+        return;
+      }
+
+      if (event.target.closest('#applyScreenshotSuggestions')) {
+        applyScreenshotSuggestionsToPrototype();
+        return;
+      }
+
+      if (event.target.closest('#sendSuggestionsToPrompt')) {
+        sendScreenshotSuggestionsToPrompt();
+      }
+    });
+
+    initState();
+  </script>
+</body>
+</html>
