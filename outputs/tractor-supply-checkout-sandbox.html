@@ -273,6 +273,73 @@
       overflow: hidden;
     }
 
+    .screen-workbench {
+      display: grid;
+      gap: 14px;
+      padding: 14px;
+      background: #f8f4ed;
+    }
+
+    .source-screen-card,
+    .updated-prototype-card {
+      display: grid;
+      gap: 0;
+      min-width: 0;
+      border: 1px solid #e1d9cf;
+      border-radius: var(--radius);
+      background: #ffffff;
+      overflow: hidden;
+    }
+
+    .source-screen-head,
+    .updated-prototype-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      min-height: 46px;
+      padding: 10px 12px;
+      border-bottom: 1px solid #ece5db;
+    }
+
+    .source-screen-head strong,
+    .updated-prototype-head strong {
+      font-size: 14px;
+      line-height: 1.2;
+    }
+
+    .source-screen-head span,
+    .updated-prototype-head span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.3;
+      text-align: right;
+    }
+
+    .source-image-scroller {
+      display: grid;
+      place-items: start center;
+      max-height: 500px;
+      overflow: auto;
+      background: #f2ece3;
+    }
+
+    .source-image-scroller img {
+      display: block;
+      width: 100%;
+      height: auto;
+      object-fit: contain;
+    }
+
+    .source-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 10px 12px;
+      border-top: 1px solid #ece5db;
+      background: #fffdf8;
+    }
+
     .cart-shell {
       background: #ffffff;
     }
@@ -1509,6 +1576,32 @@
       overflow: hidden;
     }
 
+    .compare-source-pane {
+      display: grid;
+      gap: 10px;
+      min-height: 680px;
+      padding: 12px;
+      background: #f8f4ed;
+    }
+
+    .compare-source-pane img {
+      display: block;
+      width: 100%;
+      height: auto;
+      border: 1px solid #e1d9cf;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .compare-source-meta {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+    }
+
     .compare-mini .store-nav,
     .compare-mini .experience-banner,
     .compare-mini .product-meta,
@@ -1606,6 +1699,10 @@
       clip: rect(0, 0, 0, 0);
       white-space: nowrap;
       border: 0;
+    }
+
+    [hidden] {
+      display: none !important;
     }
 
     @media (max-width: 1180px) {
@@ -1804,7 +1901,7 @@
         <div class="metrics-strip" id="metricsStrip"></div>
         <div class="prototype-stage show-notes" id="prototypeStage"></div>
         <section class="compare-view" id="compareView" aria-label="Version comparison">
-          <div class="compare-controls">
+          <div class="compare-controls" id="compareControls">
             <div class="select-field">
               <label for="compareA">Left version</label>
               <select id="compareA"></select>
@@ -2180,6 +2277,7 @@
       checkoutTab: document.getElementById('checkoutTab'),
       compareTab: document.getElementById('compareTab'),
       compareView: document.getElementById('compareView'),
+      compareControls: document.getElementById('compareControls'),
       compareA: document.getElementById('compareA'),
       compareB: document.getElementById('compareB'),
       compareAPane: document.getElementById('compareAPane'),
@@ -2375,8 +2473,8 @@
 
     function renderScreenshots() {
       const addedCount = screenshotSlots.filter(slot => screenshots[slot.key]?.dataUrl).length;
-      if (!screenshots[activeScreenshotSlot]?.dataUrl && firstAvailableScreenshotSlot()) {
-        activeScreenshotSlot = firstAvailableScreenshotSlot();
+      if (!screenshotSlots.some(slot => slot.key === activeScreenshotSlot)) {
+        activeScreenshotSlot = 'cart';
       }
       const activeSlot = screenshotSlots.find(slot => slot.key === activeScreenshotSlot) || screenshotSlots[0];
       els.screenshotCount.textContent = `${addedCount} added`;
@@ -2489,6 +2587,10 @@
                 ${icons.list}
                 Put in prompt
               </button>
+              <button class="ghost-btn" type="button" id="compareScreenshotNow" ${shot ? '' : 'disabled'}>
+                ${icons.list}
+                Compare
+              </button>
             </div>
           </aside>
         </div>
@@ -2502,12 +2604,77 @@
     function renderPrototype() {
       const showNotes = els.notesToggle.checked;
       els.prototypeStage.classList.toggle('show-notes', showNotes);
-      els.prototypeStage.innerHTML = activeView === 'checkout'
-        ? renderCheckout(activeVersion)
-        : renderCart(activeVersion);
+      els.prototypeStage.innerHTML = renderScreenWorkspace(activeVersion, activeView);
+    }
+
+    function renderScreenWorkspace(version, view) {
+      const prototype = view === 'checkout'
+        ? renderCheckout(version)
+        : renderCart(version);
+      const slotKey = sourceSlotForView(view);
+      const slot = screenshotSlots.find(item => item.key === slotKey);
+      const shot = screenshots[slotKey];
+      if (!slot || !shot?.dataUrl) return prototype;
+
+      return `
+        <div class="screen-workbench">
+          <section class="source-screen-card">
+            <div class="source-screen-head">
+              <strong>Original ${escapeHtml(slot.label)} screenshot</strong>
+              <span>${escapeHtml(shot.name)} - ${shot.width} x ${shot.height}</span>
+            </div>
+            <div class="source-image-scroller">
+              <img src="${shot.dataUrl}" alt="Original ${escapeHtml(slot.label)} screenshot">
+            </div>
+            <div class="source-actions">
+              <button class="primary-btn" type="button" data-apply-source-suggestions="${slot.key}">
+                ${icons.check}
+                Apply suggested changes
+              </button>
+              <button class="ghost-btn" type="button" data-compare-source="${slot.key}">
+                ${icons.list}
+                Compare to updated version
+              </button>
+            </div>
+          </section>
+          <section class="updated-prototype-card">
+            <div class="updated-prototype-head">
+              <strong>Updated ${view === 'checkout' ? 'checkout' : 'cart'} prototype</strong>
+              <span>${activeFeatureKeys(version).length} active changes</span>
+            </div>
+            ${prototype}
+          </section>
+        </div>
+      `;
+    }
+
+    function sourceSlotForView(view) {
+      if (view === 'checkout') return 'checkout';
+      return 'cart';
     }
 
     function renderCompare() {
+      const shotSlotKey = screenshotSlotForCompare();
+      const shotSlot = screenshotSlots.find(item => item.key === shotSlotKey);
+      const shot = screenshots[shotSlotKey];
+      if (shotSlot && shot?.dataUrl) {
+        const prototypeView = shotSlotKey === 'checkout' ? 'checkout' : 'cart';
+        els.compareControls.hidden = true;
+        els.compareATitle.textContent = `Original ${shotSlot.label}`;
+        els.compareBTitle.textContent = `Updated ${prototypeView} prototype`;
+        els.compareAScore.textContent = 'Screenshot';
+        els.compareBScore.textContent = `${scoreVersion(activeVersion).clarity} clarity`;
+        els.compareAPane.innerHTML = renderScreenshotComparePane(shotSlot, shot);
+        els.compareBPane.innerHTML = prototypeView === 'checkout'
+          ? renderCheckout(activeVersion)
+          : renderCart(activeVersion);
+        els.diffList.innerHTML = diffScreenshotToPrototype(shotSlotKey, activeVersion).map(item => `
+          <li>${icons.check}<span>${escapeHtml(item)}</span></li>
+        `).join('');
+        return;
+      }
+
+      els.compareControls.hidden = false;
       const left = getVersion(compareA);
       const right = getVersion(compareB);
       els.compareATitle.textContent = left.name;
@@ -2519,6 +2686,38 @@
       els.diffList.innerHTML = diffVersions(left, right).map(item => `
         <li>${icons.check}<span>${escapeHtml(item)}</span></li>
       `).join('');
+    }
+
+    function screenshotSlotForCompare() {
+      if (activeScreenshotSlot && screenshots[activeScreenshotSlot]?.dataUrl) return activeScreenshotSlot;
+      const viewSlot = sourceSlotForView(activeView);
+      if (screenshots[viewSlot]?.dataUrl) return viewSlot;
+      return firstAvailableScreenshotSlot();
+    }
+
+    function renderScreenshotComparePane(slot, shot) {
+      return `
+        <div class="compare-source-pane">
+          <div class="compare-source-meta">
+            <span>${escapeHtml(slot.label)}</span>
+            <span>${escapeHtml(shot.name)} - ${shot.width} x ${shot.height}</span>
+          </div>
+          <img src="${shot.dataUrl}" alt="Original ${escapeHtml(slot.label)} screenshot">
+        </div>
+      `;
+    }
+
+    function diffScreenshotToPrototype(slotKey, version) {
+      const slot = screenshotSlots.find(item => item.key === slotKey) || screenshotSlots[0];
+      const suggestions = screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
+      const active = activeFeatureKeys(version);
+      const rows = suggestions.map(item => {
+        const applied = item.features.every(featureKey => version.features[featureKey]);
+        return `${item.title}: ${applied ? 'applied in the updated prototype' : 'recommended from the original screenshot'}.`;
+      });
+      rows.push(`Original baseline: uploaded ${slot.label.toLowerCase()} screenshot.`);
+      rows.push(`Updated prototype: ${active.length ? active.map(labelForFeature).join(', ') : 'no UX changes active yet'}.`);
+      return rows;
     }
 
     function renderCart(version, mini = false) {
@@ -2958,11 +3157,14 @@
         const shot = await compressScreenshot(file);
         screenshots[slotKey] = shot;
         activeScreenshotSlot = slotKey;
+        if (slotKey === 'cart' || slotKey === 'checkout') {
+          activeView = slotKey;
+        }
         showReferencePanel = true;
         els.referenceToggle.checked = true;
         persistScreenshots();
         persist();
-        renderScreenshots();
+        renderAll();
         showToast(`${slot.label} screenshot added.`);
       } catch (error) {
         showToast('Could not read that screenshot. Try a PNG or JPG image.');
@@ -3150,6 +3352,9 @@
 
     function setActiveView(view) {
       activeView = view;
+      if (view === 'cart' || view === 'checkout') {
+        activeScreenshotSlot = view;
+      }
       renderAll();
     }
 
@@ -3260,6 +3465,21 @@
 
     els.notesToggle.addEventListener('change', renderPrototype);
 
+    els.prototypeStage.addEventListener('click', event => {
+      const applyButton = event.target.closest('[data-apply-source-suggestions]');
+      if (applyButton) {
+        activeScreenshotSlot = applyButton.dataset.applySourceSuggestions;
+        applyScreenshotSuggestionsToPrototype();
+        return;
+      }
+
+      const compareButton = event.target.closest('[data-compare-source]');
+      if (compareButton) {
+        activeScreenshotSlot = compareButton.dataset.compareSource;
+        setActiveView('compare');
+      }
+    });
+
     els.referenceToggle.addEventListener('change', () => {
       showReferencePanel = els.referenceToggle.checked;
       renderScreenshots();
@@ -3340,6 +3560,11 @@
 
       if (event.target.closest('#sendSuggestionsToPrompt')) {
         sendScreenshotSuggestionsToPrompt();
+        return;
+      }
+
+      if (event.target.closest('#compareScreenshotNow')) {
+        setActiveView('compare');
       }
     });
 
