@@ -209,6 +209,20 @@
       margin: 0 auto;
     }
 
+    .paste-target-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 32px;
+      padding: 0 10px;
+      border: 1px solid #bdd9c5;
+      border-radius: 999px;
+      color: #1f4e34;
+      background: var(--field-soft);
+      font-size: 12px;
+      font-weight: 850;
+      white-space: nowrap;
+    }
+
     .stage-wrap {
       display: grid;
       gap: 14px;
@@ -1377,6 +1391,12 @@
       box-shadow: inset 0 0 0 2px rgba(39, 98, 65, 0.08);
     }
 
+    .screenshot-dropzone.active {
+      border-color: var(--field);
+      background: var(--field-soft);
+      box-shadow: inset 0 0 0 2px rgba(39, 98, 65, 0.08);
+    }
+
     .screenshot-dropzone input {
       position: absolute;
       inset: 0;
@@ -1767,7 +1787,8 @@
       </div>
       <div class="screenshot-upload-grid" id="screenshotUploadGrid"></div>
       <div class="screenshot-top-actions">
-        <span class="badge blue">Cart, checkout, and mobile reference slots</span>
+        <span class="badge blue">Paste Snipping Tool captures with Ctrl+V</span>
+        <span class="paste-target-status" id="pasteTargetStatus">Paste target: Cart page</span>
         <label class="toggle-line" for="referenceToggle">
           Show reference panel
           <span class="switch">
@@ -2152,6 +2173,7 @@
       referenceBoard: document.getElementById('referenceBoard'),
       screenshotFocus: document.getElementById('screenshotFocus'),
       screenshotCount: document.getElementById('screenshotCount'),
+      pasteTargetStatus: document.getElementById('pasteTargetStatus'),
       screenshotPreviewGrid: document.getElementById('screenshotPreviewGrid'),
       screenshotUploadGrid: document.getElementById('screenshotUploadGrid'),
       cartTab: document.getElementById('cartTab'),
@@ -2353,22 +2375,25 @@
 
     function renderScreenshots() {
       const addedCount = screenshotSlots.filter(slot => screenshots[slot.key]?.dataUrl).length;
-      els.screenshotCount.textContent = `${addedCount} added`;
-      els.referenceBoard.hidden = !showReferencePanel;
       if (!screenshots[activeScreenshotSlot]?.dataUrl && firstAvailableScreenshotSlot()) {
         activeScreenshotSlot = firstAvailableScreenshotSlot();
       }
+      const activeSlot = screenshotSlots.find(slot => slot.key === activeScreenshotSlot) || screenshotSlots[0];
+      els.screenshotCount.textContent = `${addedCount} added`;
+      els.pasteTargetStatus.textContent = `Paste target: ${activeSlot.label}`;
+      els.referenceBoard.hidden = !showReferencePanel;
 
       els.screenshotUploadGrid.innerHTML = screenshotSlots.map(slot => {
         const shot = screenshots[slot.key];
+        const isActive = activeScreenshotSlot === slot.key;
         return `
-          <label class="screenshot-dropzone" data-shot-slot="${slot.key}">
+          <label class="screenshot-dropzone ${isActive ? 'active' : ''}" data-shot-slot="${slot.key}">
             ${icons.image}
             <span>
               <strong>${escapeHtml(slot.label)}</strong>
               <span>${shot ? escapeHtml(shot.name) : escapeHtml(slot.helper)}</span>
             </span>
-            <span class="badge ${shot ? '' : 'blue'}">${shot ? 'Replace' : 'Add'}</span>
+            <span class="badge ${isActive ? '' : 'blue'}">${isActive ? 'Paste target' : (shot ? 'Replace' : 'Add')}</span>
             <input type="file" accept="image/*" data-shot-input="${slot.key}" aria-label="Upload ${escapeHtml(slot.label)} screenshot">
           </label>
         `;
@@ -2944,6 +2969,30 @@
       }
     }
 
+    function getClipboardImageFile(clipboardData) {
+      if (!clipboardData) return null;
+      const items = Array.from(clipboardData.items || []);
+      const imageItem = items.find(item => item.kind === 'file' && item.type.startsWith('image/'));
+      const file = imageItem?.getAsFile();
+      if (!file) return null;
+      const extension = extensionForMime(file.type);
+      const slot = screenshotSlots.find(item => item.key === activeScreenshotSlot) || screenshotSlots[0];
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+      const name = `${slot.key}-snip-${timestamp}.${extension}`;
+      try {
+        return new File([file], name, { type: file.type });
+      } catch (error) {
+        return file;
+      }
+    }
+
+    function extensionForMime(mimeType) {
+      if (mimeType.includes('jpeg') || mimeType.includes('jpg')) return 'jpg';
+      if (mimeType.includes('webp')) return 'webp';
+      if (mimeType.includes('gif')) return 'gif';
+      return 'png';
+    }
+
     function compressScreenshot(file) {
       return new Promise((resolve, reject) => {
         const reader = new FileReader();
@@ -3215,6 +3264,13 @@
       showReferencePanel = els.referenceToggle.checked;
       renderScreenshots();
       persist();
+    });
+
+    document.addEventListener('paste', event => {
+      const imageFile = getClipboardImageFile(event.clipboardData);
+      if (!imageFile) return;
+      event.preventDefault();
+      addScreenshot(activeScreenshotSlot || 'cart', imageFile);
     });
 
     els.screenshotUploadGrid.addEventListener('change', event => {
