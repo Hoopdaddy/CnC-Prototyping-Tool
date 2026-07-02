@@ -366,7 +366,7 @@
     .prototype-overlay {
       position: absolute;
       display: grid;
-      gap: 4px;
+      gap: 8px;
       max-width: min(360px, 42%);
       padding: 10px;
       border: 2px solid var(--field);
@@ -387,9 +387,209 @@
       line-height: 1.3;
     }
 
+    .prototype-overlay p {
+      margin: 0;
+      color: #51585e;
+      font-size: 12px;
+      line-height: 1.3;
+    }
+
+    .overlay-kicker {
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      letter-spacing: 0.04em;
+      line-height: 1;
+      text-transform: uppercase;
+    }
+
+    .overlay-headline {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .overlay-headline strong {
+      font-size: 14px;
+    }
+
+    .overlay-badge {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 22px;
+      padding: 0 8px;
+      border-radius: 999px;
+      background: var(--field-soft);
+      color: #205337;
+      font-size: 11px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .overlay-choice-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .overlay-choice,
+    .overlay-input,
+    .overlay-wallet,
+    .overlay-step {
+      border: 1px solid #ded7cd;
+      border-radius: 6px;
+      background: #ffffff;
+    }
+
+    .overlay-choice {
+      display: grid;
+      gap: 2px;
+      padding: 8px;
+      min-height: 58px;
+    }
+
+    .overlay-choice.active {
+      border-color: var(--field);
+      background: var(--field-soft);
+      box-shadow: inset 0 0 0 1px rgba(39, 98, 65, 0.1);
+    }
+
+    .overlay-choice strong,
+    .overlay-wallet strong {
+      font-size: 12px;
+      line-height: 1.15;
+    }
+
+    .overlay-choice small,
+    .overlay-wallet small,
+    .overlay-input small,
+    .overlay-step small {
+      color: var(--muted);
+      font-size: 10px;
+      line-height: 1.2;
+    }
+
+    .overlay-total {
+      display: grid;
+      gap: 5px;
+      padding: 8px;
+      border-radius: 6px;
+      background: #fffdf8;
+      border: 1px solid #eadfd0;
+    }
+
+    .overlay-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      color: #363a3e;
+      font-size: 12px;
+      line-height: 1.2;
+    }
+
+    .overlay-row.good {
+      color: #1f6a3b;
+      font-weight: 850;
+    }
+
+    .overlay-row.total {
+      padding-top: 5px;
+      border-top: 1px solid #eadfd0;
+      color: #111111;
+      font-size: 13px;
+      font-weight: 900;
+    }
+
+    .overlay-trust-list {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .overlay-trust-item {
+      display: grid;
+      gap: 2px;
+      min-height: 44px;
+      padding: 7px;
+      border-radius: 6px;
+      background: var(--blue-soft);
+      color: #234f70;
+      font-size: 11px;
+      font-weight: 850;
+      text-align: center;
+    }
+
+    .overlay-progress {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .overlay-step {
+      display: grid;
+      gap: 3px;
+      padding: 7px;
+      color: var(--muted);
+      text-align: center;
+    }
+
+    .overlay-step.active {
+      border-color: var(--tsc-red);
+      background: #fff0f3;
+      color: var(--tsc-red-dark);
+      font-weight: 900;
+    }
+
+    .overlay-input {
+      display: grid;
+      gap: 3px;
+      padding: 8px;
+    }
+
+    .overlay-input strong {
+      font-size: 11px;
+    }
+
+    .overlay-wallet-row {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 6px;
+    }
+
+    .overlay-wallet {
+      display: grid;
+      place-items: center;
+      min-height: 38px;
+      padding: 6px;
+      text-align: center;
+    }
+
+    .overlay-primary-action {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 34px;
+      padding: 0 12px;
+      border-radius: 6px;
+      background: var(--tsc-red);
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
     .prototype-overlay.pickup {
       top: 12%;
       left: 8%;
+    }
+
+    .prototype-overlay.progress {
+      top: 8%;
+      left: 8%;
+      right: 8%;
+      max-width: none;
     }
 
     .prototype-overlay.summary {
@@ -416,6 +616,12 @@
       border-color: var(--blue);
     }
 
+    .prototype-overlay.address {
+      top: 34%;
+      right: 7%;
+      border-color: var(--field);
+    }
+
     .prototype-overlay.sticky {
       left: 8%;
       right: 8%;
@@ -430,6 +636,12 @@
 
     .prototype-overlay.sticky span {
       color: #ededed;
+    }
+
+    .prototype-overlay.sticky .overlay-primary-action {
+      min-width: 172px;
+      background: var(--tsc-red);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
     }
 
     .prototype-overlay.empty {
@@ -2087,10 +2299,6 @@
               Swap
             </button>
           </div>
-          <div class="diff-panel">
-            <h2>Change readout</h2>
-            <ul class="diff-list" id="diffList"></ul>
-          </div>
           <div class="compare-grid">
             <article class="compare-card">
               <div class="compare-head">
@@ -2107,6 +2315,10 @@
               <div class="compare-mini" id="compareBPane"></div>
             </article>
           </div>
+          <div class="diff-panel">
+            <h2>Change readout</h2>
+            <ul class="diff-list" id="diffList"></ul>
+          </div>
         </section>
         <section class="reference-board" id="referenceBoard" aria-label="Reference screenshots">
           <div class="reference-head">
@@ -2121,7 +2333,7 @@
       <aside class="control-panel" aria-label="Sandbox controls">
         <section class="panel-block wide-panel">
           <div class="panel-heading">
-            <h2>Natural language</h2>
+            <h2>Enhancements</h2>
             <span id="draftStatus">Baseline</span>
           </div>
           <textarea class="prompt-box" id="promptInput" spellcheck="true">Make store pickup the default, add a clearer total breakdown, and reassure customers that checkout is secure.</textarea>
@@ -2910,7 +3122,7 @@
             ${overlays.length ? overlays.map(renderPrototypeOverlay).join('') : `
               <div class="prototype-overlay empty">
                 <strong>No prototype changes active yet</strong>
-                <span>Use Natural language or Components to layer suggested UX changes onto this screenshot.</span>
+                <span>Use Enhancements or Components to layer suggested UX changes onto this screenshot.</span>
               </div>
             `}
           </div>
@@ -2932,21 +3144,119 @@
     }
 
     function renderPrototypeOverlay(overlay) {
-      return `
-        <div class="prototype-overlay ${overlay.kind}">
-          <strong>${escapeHtml(overlay.title)}</strong>
-          <span>${escapeHtml(overlay.body)}</span>
-        </div>
-      `;
+      const renderers = {
+        pickup: () => `
+          <div class="overlay-kicker">Fulfillment</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">Recommended</span>
+          </div>
+          <div class="overlay-choice-grid">
+            <div class="overlay-choice active">
+              <strong>Free store pickup</strong>
+              <small>Ready today at Franklin</small>
+              <small>Curbside loading available</small>
+            </div>
+            <div class="overlay-choice">
+              <strong>Ship to home</strong>
+              <small>Fees shown before checkout</small>
+              <small>Delivery estimate included</small>
+            </div>
+          </div>
+        `,
+        summary: () => `
+          <div class="overlay-kicker">Order summary</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">Transparent</span>
+          </div>
+          <div class="overlay-total">
+            <div class="overlay-row"><span>Subtotal</span><strong>$102.46</strong></div>
+            <div class="overlay-row good"><span>Neighbor savings</span><strong>-$8.50</strong></div>
+            <div class="overlay-row good"><span>Pickup savings</span><strong>-$14.95</strong></div>
+            <div class="overlay-row"><span>Estimated tax</span><strong>$7.42</strong></div>
+            <div class="overlay-row total"><span>Total today</span><strong>$86.43</strong></div>
+          </div>
+        `,
+        trust: () => `
+          <div class="overlay-kicker">Confidence</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">Secure</span>
+          </div>
+          <div class="overlay-trust-list">
+            <div class="overlay-trust-item">Secure checkout<small>Encrypted payment</small></div>
+            <div class="overlay-trust-item">Easy returns<small>Store or online</small></div>
+            <div class="overlay-trust-item">Pickup help<small>Curbside loading</small></div>
+          </div>
+        `,
+        guest: () => `
+          <div class="overlay-kicker">Account choice</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">No sign-in</span>
+          </div>
+          <p>Continue with email and phone. Create an account after purchase to save order history.</p>
+          <span class="overlay-primary-action">Continue as guest</span>
+        `,
+        payment: () => `
+          <div class="overlay-kicker">Payment</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">More choice</span>
+          </div>
+          <div class="overlay-wallet-row">
+            <div class="overlay-wallet"><strong>Card</strong><small>Visa, MC</small></div>
+            <div class="overlay-wallet"><strong>PayPal</strong><small>Fast pay</small></div>
+            <div class="overlay-wallet"><strong>Pay later</strong><small>Financing</small></div>
+          </div>
+        `,
+        progress: () => `
+          <div class="overlay-kicker">Checkout path</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">Step 2 of 4</span>
+          </div>
+          <div class="overlay-progress">
+            <div class="overlay-step active"><strong>1</strong><small>Contact</small></div>
+            <div class="overlay-step active"><strong>2</strong><small>Fulfillment</small></div>
+            <div class="overlay-step"><strong>3</strong><small>Payment</small></div>
+            <div class="overlay-step"><strong>4</strong><small>Review</small></div>
+          </div>
+        `,
+        address: () => `
+          <div class="overlay-kicker">Delivery address</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">Assisted</span>
+          </div>
+          <div class="overlay-input">
+            <strong>Start with ZIP code</strong>
+            <small>We will prefill city, state, store availability, and delivery options.</small>
+          </div>
+        `,
+        sticky: () => `
+          <div>
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span>${escapeHtml(overlay.body)}</span>
+          </div>
+          <span class="overlay-primary-action">Checkout - $86.43</span>
+        `
+      };
+      const body = (renderers[overlay.kind] || (() => `
+        <strong>${escapeHtml(overlay.title)}</strong>
+        <span>${escapeHtml(overlay.body)}</span>
+      `))();
+      return `<div class="prototype-overlay ${overlay.kind}">${body}</div>`;
     }
 
     function prototypeOverlaysFor(version, view) {
       const features = version.features;
       const overlays = [];
       if (view === 'checkout') {
-        if (features.progress) overlays.push({ kind: 'pickup', title: 'Progress stepper', body: 'Add Contact, Fulfillment, Payment, Review progress above the form.' });
+        if (features.progress) overlays.push({ kind: 'progress', title: 'Progress stepper', body: 'Add Contact, Fulfillment, Payment, Review progress above the form.' });
         if (features.guestCheckout) overlays.push({ kind: 'guest', title: 'Guest checkout first', body: 'Make account sign-in optional and clarify that email/phone are enough to continue.' });
-        if (features.addressSimplify) overlays.push({ kind: 'summary', title: 'Address assist', body: 'Start with ZIP and fulfillment choice before expanding the address form.' });
+        if (features.addressSimplify) overlays.push({ kind: 'address', title: 'Address assist', body: 'Start with ZIP and fulfillment choice before expanding the address form.' });
         if (features.paymentOptions) overlays.push({ kind: 'payment', title: 'Payment choices', body: 'Surface card, PayPal, and pay-later options before final review.' });
         if (features.trust) overlays.push({ kind: 'trust', title: 'Trust reassurance', body: 'Place encrypted payment, easy returns, and pickup confidence beside payment.' });
         if (features.mobileSticky) overlays.push({ kind: 'sticky', title: 'Sticky checkout CTA', body: 'Keep total and next action visible at the bottom on mobile.' });
