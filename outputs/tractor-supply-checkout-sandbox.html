@@ -1434,6 +1434,13 @@
       background: #ffffff;
     }
 
+    .insight-card-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+
     .insight-card strong {
       font-size: 13px;
       line-height: 1.25;
@@ -1443,6 +1450,32 @@
       color: var(--muted);
       font-size: 12px;
       line-height: 1.35;
+    }
+
+    .source-pill {
+      flex: 0 0 auto;
+      padding: 3px 7px;
+      border: 1px solid #d8d2c8;
+      border-radius: 999px;
+      background: #f8f4ed;
+      color: var(--muted);
+      font-size: 10px;
+      font-weight: 900;
+      line-height: 1;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .source-pill.retail {
+      border-color: #bdd9c5;
+      background: var(--field-soft);
+      color: #1f4e34;
+    }
+
+    .source-pill.journey {
+      border-color: #c8d7e4;
+      background: var(--blue-soft);
+      color: #234f70;
     }
 
     .focus-actions {
@@ -2240,7 +2273,9 @@
       'Clarify total, discounts, tax, and pickup savings',
       'Make guest checkout obvious before account sign-in',
       'Optimize mobile with a sticky order total and CTA',
-      'Simplify delivery address entry around ZIP code'
+      'Simplify delivery address entry around ZIP code',
+      'Use retail comps to benchmark fulfillment, wallets, address validation, and sticky summary',
+      'Tie changes to funnel friction around cart totals, delivery promise, and payment readiness'
     ];
 
     const products = [
@@ -2330,51 +2365,96 @@
         {
           title: 'Make fulfillment confidence the first decision',
           body: 'Cart shoppers should immediately know what is ready today, where it is available, and whether curbside loading applies.',
+          source: 'Screenshot',
           features: ['pickupDefault', 'stockConfidence']
         },
         {
           title: 'Clarify the total before checkout',
           body: 'Separate subtotal, fees, pickup savings, taxes, and rewards so the final CTA does not feel risky.',
+          source: 'Screenshot',
           features: ['savings', 'promoInline']
         },
         {
           title: 'Add reassurance near the CTA',
           body: 'Move secure checkout, returns, and pickup confidence beside the order summary where hesitation is highest.',
+          source: 'Screenshot',
           features: ['trust']
+        },
+        {
+          title: 'Benchmark competitor-backed cart gaps',
+          body: 'Retail comps track fulfillment selector, inventory/date promise, promo code, recommendations, save for later, and sticky summary as cart gaps to watch.',
+          source: 'Retail comps',
+          features: ['pickupDefault', 'stockConfidence', 'promoInline', 'mobileSticky']
+        },
+        {
+          title: 'Treat cart totals as a funnel friction point',
+          body: 'The journey analyzer recommends auditing cart totals, promo entry, availability messaging, and the path into checkout when cart-to-checkout movement softens.',
+          source: 'PM journey',
+          features: ['savings', 'promoInline', 'trust']
         }
       ],
       checkout: [
         {
           title: 'Reduce sign-in friction',
           body: 'Make guest checkout clearly available and position account value as an optional benefit.',
+          source: 'Screenshot',
           features: ['guestCheckout']
         },
         {
           title: 'Show checkout progress',
           body: 'Give shoppers a simple path through contact, fulfillment, payment, and review.',
+          source: 'Screenshot',
           features: ['progress']
         },
         {
           title: 'Broaden payment confidence',
           body: 'Expose payment choices and security messaging before final review.',
+          source: 'Screenshot',
           features: ['paymentOptions', 'trust']
+        },
+        {
+          title: 'Prioritize competitor-backed checkout gaps',
+          body: 'Retail comps watch guest checkout, sign-in gates, wallet buttons, PayPal, BNPL, rewards prompts, address validation, pickup appointments, and SMS opt-in.',
+          source: 'Retail comps',
+          features: ['guestCheckout', 'paymentOptions', 'addressSimplify']
+        },
+        {
+          title: 'Connect the change to the largest checkout dropoff',
+          body: 'The journey analyzer points review toward checkout entry, sign-in friction, address capture, payment readiness, and page performance by device.',
+          source: 'PM journey',
+          features: ['progress', 'guestCheckout', 'addressSimplify', 'paymentOptions', 'mobileSticky']
         }
       ],
       mobile: [
         {
           title: 'Keep the next action in thumb reach',
           body: 'Use a sticky mobile CTA with total context so shoppers do not lose momentum while scrolling.',
+          source: 'Screenshot',
           features: ['mobileSticky']
         },
         {
           title: 'Simplify form entry',
           body: 'Start address work with ZIP or selected fulfillment context before expanding the full form.',
+          source: 'Screenshot',
           features: ['addressSimplify']
         },
         {
           title: 'Condense confidence cues',
           body: 'Use compact trust and fulfillment cues that do not bury the primary action.',
+          source: 'Screenshot',
           features: ['trust', 'pickupDefault']
+        },
+        {
+          title: 'Check mobile against competitor feature coverage',
+          body: 'Retail comps make it easy to validate whether sticky summary, wallet buttons, and pickup details are table stakes across peer retailers.',
+          source: 'Retail comps',
+          features: ['mobileSticky', 'paymentOptions', 'pickupDefault']
+        },
+        {
+          title: 'Segment mobile friction before shipping',
+          body: 'The journey analyzer recommends pairing the largest dropoff with device and traffic-source segmentation before choosing the final mobile treatment.',
+          source: 'PM journey',
+          features: ['mobileSticky', 'addressSimplify', 'trust']
         }
       ]
     };
@@ -2580,6 +2660,17 @@
       return featureCatalog.find(feature => feature.key === key)?.label || key;
     }
 
+    function suggestionSourceClass(source) {
+      const lower = String(source || '').toLowerCase();
+      if (lower.includes('retail')) return 'retail';
+      if (lower.includes('journey') || lower.includes('funnel')) return 'journey';
+      return 'sandbox';
+    }
+
+    function formatSuggestionTitle(item) {
+      return `${item.source ? `${item.source}: ` : ''}${item.title}`;
+    }
+
     function renderVersionControls() {
       const options = versions.map(version => `<option value="${version.id}" ${version.id === activeVersion.id ? 'selected' : ''}>${escapeHtml(version.name)}</option>`).join('');
       els.versionSelect.innerHTML = options;
@@ -2678,6 +2769,7 @@
       const activeSlot = screenshotSlots.find(slot => slot.key === activeScreenshotSlot) || screenshotSlots[0];
       const shot = screenshots[activeSlot.key];
       const suggestions = screenshotSuggestionMap[activeSlot.key] || screenshotSuggestionMap.cart;
+      const suggestionSources = [...new Set(suggestions.map(item => item.source).filter(Boolean))].join(', ');
       const picker = screenshotSlots.map(slot => `
         <button class="shot-tab" type="button" data-focus-shot="${slot.key}" aria-pressed="${activeScreenshotSlot === slot.key ? 'true' : 'false'}">
           ${escapeHtml(slot.label)}
@@ -2706,13 +2798,16 @@
           <aside class="insight-panel">
             <div class="insight-head">
               <strong>Suggested improvements</strong>
-              <span>${shot ? 'Based on the selected screenshot type' : 'Ready after upload'}</span>
+              <span>${shot ? `Includes ${escapeHtml(suggestionSources)}` : 'Ready after upload'}</span>
             </div>
             <div class="screenshot-picker">${picker}</div>
             <div class="insight-list">
               ${suggestions.map(item => `
                 <div class="insight-card">
-                  <strong>${escapeHtml(item.title)}</strong>
+                  <div class="insight-card-head">
+                    <strong>${escapeHtml(item.title)}</strong>
+                    <span class="source-pill ${suggestionSourceClass(item.source)}">${escapeHtml(item.source || 'Sandbox')}</span>
+                  </div>
                   <span>${escapeHtml(item.body)}</span>
                 </div>
               `).join('')}
@@ -2925,7 +3020,7 @@
       const active = activeFeatureKeys(version);
       const rows = suggestions.map(item => {
         const applied = item.features.every(featureKey => version.features[featureKey]);
-        return `${item.title}: ${applied ? 'applied in the updated prototype' : 'recommended from the original screenshot'}.`;
+        return `${formatSuggestionTitle(item)}: ${applied ? 'applied in the updated prototype' : 'recommended from the original screenshot'}.`;
       });
       rows.push(`Original baseline: uploaded ${slot.label.toLowerCase()} screenshot.`);
       rows.push(`Updated prototype: ${active.length ? active.map(labelForFeature).join(', ') : 'no UX changes active yet'}.`);
@@ -3448,7 +3543,9 @@
     function screenshotPromptFor(slotKey) {
       const slot = screenshotSlots.find(item => item.key === slotKey) || screenshotSlots[0];
       const suggestions = screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
-      return `Use the uploaded ${slot.label.toLowerCase()} screenshot as the reference. ${suggestions.map(item => item.title).join('. ')}.`;
+      const sources = [...new Set(suggestions.map(item => item.source).filter(Boolean))];
+      const sourceLine = sources.length ? ` Include findings from ${sources.join(', ')}.` : '';
+      return `Use the uploaded ${slot.label.toLowerCase()} screenshot as the reference.${sourceLine} ${suggestions.map(formatSuggestionTitle).join('. ')}.`;
     }
 
     function applyScreenshotSuggestionsToPrototype() {
@@ -3466,7 +3563,7 @@
         `Hypothesis: The uploaded ${slot.label.toLowerCase()} shows opportunities to improve clarity, confidence, and checkout momentum.`,
         '',
         'Suggested UX changes:',
-        ...suggestions.map(item => `- ${item.title}: ${item.body}`),
+        ...suggestions.map(item => `- ${formatSuggestionTitle(item)}: ${item.body}`),
         '',
         `Prototype changes activated: ${Object.keys(features).filter(key => features[key]).map(labelForFeature).join(', ')}.`
       ].join('\n');
