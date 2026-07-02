@@ -622,6 +622,14 @@
       border-color: var(--field);
     }
 
+    .prototype-overlay.custom {
+      top: 31%;
+      left: 16%;
+      max-width: min(420px, 46%);
+      border-color: var(--amber);
+      background: rgba(255, 252, 244, 0.97);
+    }
+
     .prototype-overlay.sticky {
       left: 8%;
       right: 8%;
@@ -642,6 +650,25 @@
       min-width: 172px;
       background: var(--tsc-red);
       box-shadow: 0 6px 14px rgba(0, 0, 0, 0.25);
+    }
+
+    .custom-enhancement-card {
+      display: grid;
+      gap: 8px;
+      padding: 10px;
+      border: 1px solid #ead09c;
+      border-radius: 6px;
+      background: #fff8e8;
+    }
+
+    .custom-enhancement-card strong {
+      font-size: 13px;
+    }
+
+    .custom-enhancement-card span {
+      color: #5d5341;
+      font-size: 12px;
+      line-height: 1.35;
     }
 
     .prototype-overlay.empty {
@@ -1392,6 +1419,13 @@
       font-weight: 750;
       color: #35383c;
       background: #f7f3ec;
+    }
+
+    .chip-btn[aria-pressed="true"] {
+      border-color: var(--field);
+      background: var(--field-soft);
+      color: #1f4e34;
+      box-shadow: inset 0 0 0 1px rgba(39, 98, 65, 0.1);
     }
 
     .component-grid {
@@ -2382,7 +2416,7 @@
             <h2>Enhancements</h2>
             <span id="draftStatus">Baseline</span>
           </div>
-          <textarea class="prompt-box" id="promptInput" spellcheck="true">Make store pickup the default, add a clearer total breakdown, and reassure customers that checkout is secure.</textarea>
+          <textarea class="prompt-box" id="promptInput" spellcheck="true" placeholder="Describe a custom cart or checkout enhancement to add to the prototype."></textarea>
           <div class="button-row">
             <button class="primary-btn" id="generateBtn" type="button">
               <svg width="17" height="17" viewBox="0 0 24 24" aria-hidden="true"><path d="M13 2 3 14h8l-1 8 10-12h-8l1-8Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>
@@ -2725,6 +2759,7 @@
     let activeScreenshotSlot = 'cart';
     let showReferencePanel = true;
     let selectedSuggestionKeys = new Set();
+    let selectedPromptKeys = new Set();
     let toastTimer = null;
 
     const els = {
@@ -2792,7 +2827,7 @@
       showReferencePanel = saved?.showReferencePanel !== false;
       activeScreenshotSlot = saved?.activeScreenshotSlot || firstAvailableScreenshotSlot() || 'cart';
       els.referenceToggle.checked = showReferencePanel;
-      els.promptInput.value = activeVersion.prompt || '';
+      els.promptInput.value = '';
       els.notesField.value = activeVersion.notes || '';
       renderAll();
     }
@@ -2977,9 +3012,8 @@
     }
 
     function renderPromptChips() {
-      if (els.promptChips.childElementCount) return;
       els.promptChips.innerHTML = promptChips.map(prompt => `
-        <button class="chip-btn" type="button" data-prompt="${escapeHtml(prompt)}">${escapeHtml(prompt)}</button>
+        <button class="chip-btn" type="button" data-prompt="${escapeHtml(prompt)}" aria-pressed="${selectedPromptKeys.has(prompt) ? 'true' : 'false'}">${escapeHtml(prompt)}</button>
       `).join('');
     }
 
@@ -3183,6 +3217,8 @@
       const activeCards = activeFeatureKeys(version)
         .map(key => featureCatalog.find(feature => feature.key === key))
         .filter(Boolean);
+      const customCards = (version.customEnhancements || [])
+        .filter(item => !item.view || item.view === view || (item.view === 'mobile' && view === 'cart'));
 
       return `
         <div class="screenshot-prototype-shell">
@@ -3196,12 +3232,20 @@
             `}
           </div>
           <div class="prototype-component-tray">
-            ${activeCards.length ? activeCards.map(feature => `
+            ${activeCards.length || customCards.length ? `
+              ${activeCards.map(feature => `
               <article class="prototype-component-card">
                 <strong>${escapeHtml(feature.label)}</strong>
                 <span>${escapeHtml(feature.note)}</span>
               </article>
-            `).join('') : `
+              `).join('')}
+              ${customCards.map(item => `
+              <article class="prototype-component-card">
+                <strong>${escapeHtml(item.title || 'Custom enhancement')}</strong>
+                <span>${escapeHtml(item.body || item.text || 'Custom prototype enhancement.')}</span>
+              </article>
+              `).join('')}
+            ` : `
               <article class="prototype-component-card">
                 <strong>Screenshot baseline</strong>
                 <span>This prototype is anchored to the uploaded ${escapeHtml(slot.label.toLowerCase())} image.</span>
@@ -3310,6 +3354,17 @@
             <span>${escapeHtml(overlay.body)}</span>
           </div>
           <span class="overlay-primary-action">Checkout - $86.43</span>
+        `,
+        custom: () => `
+          <div class="overlay-kicker">Custom enhancement</div>
+          <div class="overlay-headline">
+            <strong>${escapeHtml(overlay.title)}</strong>
+            <span class="overlay-badge">Draft</span>
+          </div>
+          <div class="custom-enhancement-card">
+            <strong>Prototype idea</strong>
+            <span>${escapeHtml(overlay.body)}</span>
+          </div>
         `
       };
       const body = (renderers[overlay.kind] || (() => `
@@ -3329,6 +3384,11 @@
         if (features.paymentOptions) overlays.push({ kind: 'payment', title: 'Payment choices', body: 'Surface card, PayPal, and pay-later options before final review.' });
         if (features.trust) overlays.push({ kind: 'trust', title: 'Trust reassurance', body: 'Place encrypted payment, easy returns, and pickup confidence beside payment.' });
         if (features.mobileSticky) overlays.push({ kind: 'sticky', title: 'Sticky checkout CTA', body: 'Keep total and next action visible at the bottom on mobile.' });
+        (version.customEnhancements || []).forEach(item => {
+          if (!item.view || item.view === view) {
+            overlays.push({ kind: 'custom', title: item.title || 'Custom enhancement', body: item.body || item.text || 'Custom prototype enhancement.' });
+          }
+        });
         return overlays;
       }
 
@@ -3338,6 +3398,11 @@
       if (features.guestCheckout) overlays.push({ kind: 'guest', title: 'Guest path reminder', body: 'Tell shoppers they can continue without creating an account.' });
       if (features.paymentOptions) overlays.push({ kind: 'payment', title: 'Payment choice preview', body: 'Preview accepted payment and financing options before checkout.' });
       if (features.mobileSticky) overlays.push({ kind: 'sticky', title: 'Sticky cart CTA', body: 'Pin subtotal and Checkout action for mobile shoppers.' });
+      (version.customEnhancements || []).forEach(item => {
+        if (!item.view || item.view === view || (item.view === 'mobile' && view === 'cart')) {
+          overlays.push({ kind: 'custom', title: item.title || 'Custom enhancement', body: item.body || item.text || 'Custom prototype enhancement.' });
+        }
+      });
       return overlays;
     }
 
@@ -3741,9 +3806,8 @@
       return subtotal() + 12.95 + 7.42;
     }
 
-    function deriveVersionFromPrompt(prompt) {
+    function applyPromptToFeatures(prompt, features, allowFallback = true) {
       const lower = prompt.toLowerCase();
-      const features = { ...activeVersion.features };
       const asksForFresh = /(start over|baseline|reset|from scratch|control)/.test(lower);
       if (asksForFresh) {
         Object.keys(features).forEach(key => features[key] = false);
@@ -3763,23 +3827,67 @@
         features.stockConfidence = true;
       }
       if (/(clear|clarify|transparent|explain|show).*(total|fees|tax|savings)/.test(lower)) features.savings = true;
-      if (activeFeatureKeys({ features }).length === activeFeatureKeys(activeVersion).length && !asksForFresh) {
+      if (allowFallback && activeFeatureKeys({ features }).length === activeFeatureKeys(activeVersion).length && !asksForFresh) {
         features.pickupDefault = true;
         features.trust = true;
         features.savings = true;
       }
+      return features;
+    }
 
+    function customEnhancementTitle(text) {
+      const clean = text.trim().replace(/\s+/g, ' ');
+      if (!clean) return 'Custom enhancement';
+      return clean.length > 46 ? `${clean.slice(0, 43)}...` : clean;
+    }
+
+    function generateEnhancementVariation() {
+      const selectedPrompts = promptChips.filter(prompt => selectedPromptKeys.has(prompt));
+      const customText = els.promptInput.value.trim();
+      if (!selectedPrompts.length && !customText) {
+        showToast('Select a preset or type a custom enhancement first.');
+        return;
+      }
+
+      const features = { ...activeVersion.features };
+      selectedPrompts.forEach(prompt => applyPromptToFeatures(prompt, features, true));
+      if (customText) applyPromptToFeatures(customText, features, false);
+
+      const customEnhancements = [...(activeVersion.customEnhancements || [])];
+      if (customText) {
+        customEnhancements.push({
+          id: `custom-${Date.now()}`,
+          title: customEnhancementTitle(customText),
+          body: customText,
+          view: activeView === 'checkout' ? 'checkout' : 'cart'
+        });
+      }
+
+      const promptSummary = [
+        ...selectedPrompts.map(prompt => `Preset: ${prompt}`),
+        customText ? `Custom: ${customText}` : ''
+      ].filter(Boolean).join(' | ');
       const activeLabels = Object.keys(features).filter(key => features[key]).map(labelForFeature);
-      const name = activeLabels.length ? titleFromFeatures(activeLabels) : 'Baseline variant';
-      return {
+      const name = customText ? 'Custom enhancement' : titleFromFeatures(activeLabels);
+
+      activeVersion = {
+        ...cloneVersion(activeVersion),
         id: `draft-${Date.now()}`,
         name,
-        prompt: prompt.trim() || 'Manual checkout variation',
+        prompt: promptSummary,
         created: 'Draft',
         features,
-        notes: makeNotes(features, prompt),
+        customEnhancements,
+        notes: makeNotes(features, promptSummary),
         saved: false
       };
+      if (customText) {
+        activeVersion.notes += `\n\nCustom enhancement:\n- ${customText}`;
+      }
+      if (activeView === 'compare') activeView = 'cart';
+      els.notesField.value = activeVersion.notes;
+      showToast(`${selectedPrompts.length + (customText ? 1 : 0)} enhancement${selectedPrompts.length + (customText ? 1 : 0) === 1 ? '' : 's'} generated.`);
+      renderAll();
     }
 
     function titleFromFeatures(labels) {
@@ -4055,7 +4163,8 @@
     function setActiveVersion(id) {
       const selected = getVersion(id);
       activeVersion = cloneVersion(selected);
-      els.promptInput.value = activeVersion.prompt || '';
+      els.promptInput.value = '';
+      selectedPromptKeys.clear();
       els.notesField.value = activeVersion.notes || '';
       renderAll();
     }
@@ -4096,17 +4205,14 @@
     }
 
     els.generateBtn.addEventListener('click', () => {
-      activeVersion = deriveVersionFromPrompt(els.promptInput.value);
-      els.notesField.value = activeVersion.notes;
-      if (activeView === 'compare') activeView = 'cart';
-      showToast('Variation generated.');
-      renderAll();
+      generateEnhancementVariation();
     });
 
     els.saveBtn.addEventListener('click', saveActiveVersion);
     els.resetBtn.addEventListener('click', () => {
       activeVersion = cloneVersion(baselineVersion);
-      els.promptInput.value = activeVersion.prompt;
+      els.promptInput.value = '';
+      selectedPromptKeys.clear();
       showToast('Baseline restored.');
       renderAll();
     });
@@ -4145,10 +4251,13 @@
     els.promptChips.addEventListener('click', event => {
       const button = event.target.closest('[data-prompt]');
       if (!button) return;
-      els.promptInput.value = button.dataset.prompt;
-      activeVersion = deriveVersionFromPrompt(els.promptInput.value);
-      els.notesField.value = activeVersion.notes;
-      renderAll();
+      const prompt = button.dataset.prompt;
+      if (selectedPromptKeys.has(prompt)) {
+        selectedPromptKeys.delete(prompt);
+      } else {
+        selectedPromptKeys.add(prompt);
+      }
+      renderPromptChips();
     });
 
     els.notesField.addEventListener('input', () => {
