@@ -1640,10 +1640,28 @@
     .insight-card {
       display: grid;
       gap: 5px;
+      width: 100%;
       padding: 10px;
       border: 1px solid #e5ded4;
       border-radius: 6px;
       background: #ffffff;
+      color: var(--ink);
+      text-align: left;
+    }
+
+    .insight-card.selectable {
+      cursor: pointer;
+    }
+
+    .insight-card.selectable:hover {
+      border-color: #bdd9c5;
+      background: #fbfdf9;
+    }
+
+    .insight-card.selected {
+      border-color: var(--field);
+      background: var(--field-soft);
+      box-shadow: inset 0 0 0 1px rgba(39, 98, 65, 0.12);
     }
 
     .insight-card-head {
@@ -1651,6 +1669,34 @@
       align-items: flex-start;
       justify-content: space-between;
       gap: 8px;
+    }
+
+    .selection-check {
+      display: inline-grid;
+      place-items: center;
+      flex: 0 0 auto;
+      width: 22px;
+      height: 22px;
+      border: 1px solid #cfc7bc;
+      border-radius: 50%;
+      background: #ffffff;
+      color: transparent;
+      font-size: 13px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .insight-card.selected .selection-check {
+      border-color: var(--field);
+      background: var(--field);
+      color: #ffffff;
+    }
+
+    .insight-title-row {
+      display: inline-flex;
+      align-items: flex-start;
+      gap: 8px;
+      min-width: 0;
     }
 
     .insight-card strong {
@@ -2678,6 +2724,7 @@
     let screenshots = {};
     let activeScreenshotSlot = 'cart';
     let showReferencePanel = true;
+    let selectedSuggestionKeys = new Set();
     let toastTimer = null;
 
     const els = {
@@ -2883,6 +2930,29 @@
       return `${item.source ? `${item.source}: ` : ''}${item.title}`;
     }
 
+    function suggestionKey(slotKey, index) {
+      return `${slotKey}:${index}`;
+    }
+
+    function selectedSuggestionsForSlot(slotKey) {
+      const suggestions = screenshotSuggestionMap[slotKey] || screenshotSuggestionMap.cart;
+      return suggestions.filter((item, index) => selectedSuggestionKeys.has(suggestionKey(slotKey, index)));
+    }
+
+    function selectedSuggestionCount(slotKey) {
+      return selectedSuggestionsForSlot(slotKey).length;
+    }
+
+    function toggleSuggestionSelection(slotKey, index) {
+      const key = suggestionKey(slotKey, index);
+      if (selectedSuggestionKeys.has(key)) {
+        selectedSuggestionKeys.delete(key);
+      } else {
+        selectedSuggestionKeys.add(key);
+      }
+      renderScreenshots();
+    }
+
     function renderVersionControls() {
       const options = versions.map(version => `<option value="${version.id}" ${version.id === activeVersion.id ? 'selected' : ''}>${escapeHtml(version.name)}</option>`).join('');
       els.versionSelect.innerHTML = options;
@@ -2982,6 +3052,7 @@
       const shot = screenshots[activeSlot.key];
       const suggestions = screenshotSuggestionMap[activeSlot.key] || screenshotSuggestionMap.cart;
       const suggestionSources = [...new Set(suggestions.map(item => item.source).filter(Boolean))].join(', ');
+      const selectedCount = selectedSuggestionCount(activeSlot.key);
       const picker = screenshotSlots.map(slot => `
         <button class="shot-tab" type="button" data-focus-shot="${slot.key}" aria-pressed="${activeScreenshotSlot === slot.key ? 'true' : 'false'}">
           ${escapeHtml(slot.label)}
@@ -3014,28 +3085,26 @@
             </div>
             <div class="screenshot-picker">${picker}</div>
             <div class="insight-list">
-              ${suggestions.map(item => `
-                <div class="insight-card">
+              ${suggestions.map((item, index) => {
+                const isSelected = selectedSuggestionKeys.has(suggestionKey(activeSlot.key, index));
+                return `
+                <button class="insight-card selectable ${isSelected ? 'selected' : ''}" type="button" data-suggestion-index="${index}" aria-pressed="${isSelected ? 'true' : 'false'}">
                   <div class="insight-card-head">
-                    <strong>${escapeHtml(item.title)}</strong>
+                    <span class="insight-title-row">
+                      <span class="selection-check" aria-hidden="true">${isSelected ? '&#10003;' : ''}</span>
+                      <strong>${escapeHtml(item.title)}</strong>
+                    </span>
                     <span class="source-pill ${suggestionSourceClass(item.source)}">${escapeHtml(item.source || 'Sandbox')}</span>
                   </div>
                   <span>${escapeHtml(item.body)}</span>
-                </div>
-              `).join('')}
+                </button>
+              `;
+              }).join('')}
             </div>
             <div class="focus-actions">
-              <button class="primary-btn" type="button" id="applyScreenshotSuggestions" ${shot ? '' : 'disabled'}>
+              <button class="primary-btn" type="button" id="applyScreenshotSuggestions" ${shot && selectedCount ? '' : 'disabled'}>
                 ${icons.check}
-                Apply to prototype
-              </button>
-              <button class="ghost-btn" type="button" id="sendSuggestionsToPrompt" ${shot ? '' : 'disabled'}>
-                ${icons.list}
-                Put in prompt
-              </button>
-              <button class="ghost-btn" type="button" id="compareScreenshotNow" ${shot ? '' : 'disabled'}>
-                ${icons.list}
-                Compare
+                ${selectedCount ? `Apply ${selectedCount} to prototype` : 'Select improvements to apply'}
               </button>
             </div>
           </aside>
@@ -3850,22 +3919,28 @@
       });
     }
 
-    function screenshotPromptFor(slotKey) {
+    function screenshotPromptFor(slotKey, selectedSuggestions = null) {
       const slot = screenshotSlots.find(item => item.key === slotKey) || screenshotSlots[0];
-      const suggestions = screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
+      const suggestions = selectedSuggestions || screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
       const sources = [...new Set(suggestions.map(item => item.source).filter(Boolean))];
       const sourceLine = sources.length ? ` Include findings from ${sources.join(', ')}.` : '';
       return `Use the uploaded ${slot.label.toLowerCase()} screenshot as the reference.${sourceLine} ${suggestions.map(formatSuggestionTitle).join('. ')}.`;
     }
 
-    function applyScreenshotSuggestionsToPrototype() {
+    function applyScreenshotSuggestionsToPrototype(options = {}) {
       const slot = screenshotSlots.find(item => item.key === activeScreenshotSlot) || screenshotSlots[0];
-      const suggestions = screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
+      const allSuggestions = screenshotSuggestionMap[slot.key] || screenshotSuggestionMap.cart;
+      const selectedSuggestions = selectedSuggestionsForSlot(slot.key);
+      const suggestions = selectedSuggestions.length || !options.allIfNone ? selectedSuggestions : allSuggestions;
+      if (!suggestions.length) {
+        showToast('Select at least one suggested improvement first.');
+        return;
+      }
       const features = { ...activeVersion.features };
       suggestions.forEach(item => item.features.forEach(featureKey => {
         features[featureKey] = true;
       }));
-      const prompt = screenshotPromptFor(slot.key);
+      const prompt = screenshotPromptFor(slot.key, suggestions);
       const shot = screenshots[slot.key];
       const notes = [
         `Reference screenshot: ${shot?.name || slot.label}`,
@@ -3893,7 +3968,7 @@
       showReferencePanel = true;
       els.referenceToggle.checked = true;
       renderAll();
-      showToast('Screenshot suggestions applied to the prototype.');
+      showToast(`${suggestions.length} suggested improvement${suggestions.length === 1 ? '' : 's'} applied to the prototype.`);
     }
 
     function sendScreenshotSuggestionsToPrompt() {
@@ -4088,7 +4163,7 @@
       const applyButton = event.target.closest('[data-apply-source-suggestions]');
       if (applyButton) {
         activeScreenshotSlot = applyButton.dataset.applySourceSuggestions;
-        applyScreenshotSuggestionsToPrototype();
+        applyScreenshotSuggestionsToPrototype({ allIfNone: true });
         return;
       }
 
@@ -4172,18 +4247,14 @@
         return;
       }
 
+      const suggestionButton = event.target.closest('[data-suggestion-index]');
+      if (suggestionButton) {
+        toggleSuggestionSelection(activeScreenshotSlot, Number(suggestionButton.dataset.suggestionIndex));
+        return;
+      }
+
       if (event.target.closest('#applyScreenshotSuggestions')) {
         applyScreenshotSuggestionsToPrototype();
-        return;
-      }
-
-      if (event.target.closest('#sendSuggestionsToPrompt')) {
-        sendScreenshotSuggestionsToPrompt();
-        return;
-      }
-
-      if (event.target.closest('#compareScreenshotNow')) {
-        setActiveView('compare');
       }
     });
 
