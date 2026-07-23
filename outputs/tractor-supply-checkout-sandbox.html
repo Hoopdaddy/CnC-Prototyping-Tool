@@ -3849,6 +3849,11 @@
         return;
       }
 
+      const wasCompareView = activeView === 'compare';
+      const compareSlot = wasCompareView ? screenshotSlotForCompare() : null;
+      const targetView = wasCompareView
+        ? (compareSlot === 'checkout' ? 'checkout' : 'cart')
+        : (activeView === 'checkout' ? 'checkout' : 'cart');
       const features = { ...activeVersion.features };
       selectedPrompts.forEach(prompt => applyPromptToFeatures(prompt, features, true));
       if (customText) applyPromptToFeatures(customText, features, false);
@@ -3859,7 +3864,7 @@
           id: `custom-${Date.now()}`,
           title: customEnhancementTitle(customText),
           body: customText,
-          view: activeView === 'checkout' ? 'checkout' : 'cart'
+          view: targetView
         });
       }
 
@@ -3884,7 +3889,6 @@
       if (customText) {
         activeVersion.notes += `\n\nCustom enhancement:\n- ${customText}`;
       }
-      if (activeView === 'compare') activeView = 'cart';
       els.notesField.value = activeVersion.notes;
       showToast(`${selectedPrompts.length + (customText ? 1 : 0)} enhancement${selectedPrompts.length + (customText ? 1 : 0) === 1 ? '' : 's'} generated.`);
       renderAll();
